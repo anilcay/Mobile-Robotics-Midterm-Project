@@ -71,3 +71,14 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Bağlam:** Ekip tasarımın kaliteli ve özgün görünmesini istiyor; robot modeli oturumu (S1) Blender'a bağlanarak (Blender MCP) çalışacak.
 - **Karar:** Her link'in `visual` geometrisi Blender'da modellenen mesh; `collision` geometrisi kutu/silindir/küre primitifleri. Kurallar `INTERFACES.md` §4.1'de (birim, eksen, orijin, format, poligon bütçesi). Kaynak `.blend` dosyası repoda tutulur.
 - **Sonuç:** Görünüm kaliteli, fizik kararlı ve hızlı kalır. Mesh formatının (DAE / glTF / OBJ) hem RViz2 hem Gazebo Jetty'de renkleriyle yüklendiği ⚠ doğrulanacak; doğrulanana kadar boyutlar primitif modelle birebir aynı tutulur, böylece mesh'ler sonradan yerine takılabilir.
+
+## ADR-013 — Paket iskeleti kuralları
+- **Tarih:** 2026-10-24 · **Durum:** Kabul
+- **Bağlam:** Paralel çalışan modüllerin aynı manifest/kurulum dosyalarını düzenlemesi çakışma yaratır.
+- **Karar:** S0 tüm paket manifestlerini (`package.xml`, `CMakeLists.txt`, `setup.py`) önceden yazar. Python entry point'leri önceden kayıtlıdır. Ana xacro'nun include ettiği her dosya, makro adı ve parametresi sabit bir `PLACEHOLDER` olarak oluşturulur (`INTERFACES.md` §8). Xacro include'ları göreli yoldur (Windows'ta ROS'suz kontrol için). `GZ_SIM_RESOURCE_PATH` ortam kancalarıyla ayarlanır. Python stil kontrolü `ament_flake8` (max 99 karakter). Lisans geçici olarak Apache-2.0 (kesin karar bekliyor).
+- **Sonuç:** Modüller sadece kendi dosyalarına dokunarak ilerler. Yeni bağımlılık veya entry point gerekiyorsa açık istek yazılır.
+
+## ADR-014 — GitHub Actions CI
+- **Tarih:** 2026-10-24 · **Durum:** Kabul
+- **Karar:** Her push (main) ve PR'da `ros:lyrical` konteynerinde: `rosdep install` → `colcon build` → `xacro` + `check_urdf` → `colcon test`.
+- **Sonuç:** Linux tarafındaki derleme/URDF hataları Üye B'nin VM'ine gerek kalmadan yakalanır. Simülasyon davranışı CI kapsamında değildir.

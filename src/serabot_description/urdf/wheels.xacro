@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--
+  PLACEHOLDER created by S0 so the top-level xacro builds.
+  Owner: S1 (robot model) - replace the macro body; keep the macro name and parameters
+  (they are part of the contract used by serabot.urdf.xacro).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="serabot_wheels">
+
+  </xacro:macro>
+</robot>

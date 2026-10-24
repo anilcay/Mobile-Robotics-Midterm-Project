@@ -1,5 +1,7 @@
 # SeraBot — Greenhouse Inspection Mobile Robot
 
+[![CI](https://github.com/anilcay/Mobile-Robotics-Midterm-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/anilcay/Mobile-Robotics-Midterm-Project/actions/workflows/ci.yml)
+
 BIMU4101 – Introduction to Mobile Robotics, Midterm Project.
 
 SeraBot is an original differential-drive mobile robot that patrols the aisles of a greenhouse, avoids obstacles with a 2D LiDAR, measures its turns with an IMU and detects ripe (red) produce with an RGB camera. It is modelled in URDF/Xacro, simulated in Gazebo and controlled through ROS 2.
