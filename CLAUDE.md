@@ -30,7 +30,7 @@ Birden fazla Claude oturumu **aynı klasörde** çalışır. Çakışmayı önle
 
 | Oturum | Modül dosyası | Sahip olduğu yollar |
 |---|---|---|
-| S0 Yönetici | — | `CLAUDE.md`, `docs/` (modül dosyaları hariç), `README.md`, `.github/`, `src/serabot_description/urdf/serabot.urdf.xacro`, `src/serabot_bringup/rviz/`, tüm `package.xml` / `setup.py` / `CMakeLists.txt` iskeletleri |
+| S0 Yönetici | — | `CLAUDE.md`, `docs/` (modül dosyaları hariç), `README.md`, `.github/`, `docker/`, `scripts/`, `src/serabot_description/urdf/serabot.urdf.xacro`, `src/serabot_bringup/rviz/`, tüm `package.xml` / `setup.py` / `CMakeLists.txt` iskeletleri |
 | S1 Robot modeli | `docs/modules/description.md` | `src/serabot_description/` (yukarıdaki ana xacro ve `urdf/sensors/` hariç) |
 | S2 Simülasyon | `docs/modules/simulation.md` | `src/serabot_gazebo/`, `src/serabot_bringup/launch/`, `src/serabot_bringup/config/bridge/base.yaml` |
 | S3a LiDAR (Üye A) | `docs/modules/sensor-lidar.md` | `urdf/sensors/lidar.xacro`, `config/bridge/lidar.yaml`, `serabot_sensors/` içindeki lidar dosyaları |
@@ -57,7 +57,8 @@ Geliştirme şu an **Windows 10** üzerinde yapılıyor; ROS 2 / Gazebo yerelde 
   - Araçlar (`xacro`, `flake8`, `pytest`) Windows'ta `pip install --user` ile kurulu.
 - Linux'ta doğrulanamayan her şey modül dosyasında **"Linux'ta doğrulanmadı"** olarak işaretlenir. Asla "çalışıyor" denmez; "derleniyor / testi geçiyor / doğrulanmadı" diye net yazılır.
 - GitHub Actions CI (`ros:lyrical` imajı) ile `colcon build` + testler.
-- Simülasyon testi **Üye B'nin Ubuntu sanal makinesinde** yapılır (ADR-011). Gazebo'da denenmesi gereken şeyler için modül dosyasına Üye B'nin çalıştıracağı net komutları ve beklenen sonucu yaz.
+- Simülasyon testi **Üye A'nın test VM'inde Docker ile** yapılabilir (ADR-016, `docs/DEV_ENVIRONMENT.md`): `scripts/sync_to_vm.sh` ile kopyala, `ssh serabot-vm 'cd serabot_ws && docker/run.sh exec "<komut>"'` ile çalıştır. VM'e erişimi olmayan oturumlar ve Üye B için: modül dosyasına çalıştırılacak net komutları ve beklenen sonucu yaz (ADR-011).
+- VM'de `sudo` gerektiren bir adım varsa kullanıcıya bildir; şifre asla istenmez/girilmez.
 - Proje yolu Türkçe karakter ve boşluk içerebilir; shell komutlarında yolları **tırnak içinde** kullan.
 
 ## 5. Kodlama kuralları

@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.4 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015)
+**Sürüm:** 0.5 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1)
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -109,9 +109,9 @@ Başlangıç değerleri — S1 `properties.xacro`'da bunları kullanır. Diğer 
 | Parçalama | Her link için ayrı mesh dosyası: `chassis`, `wheel` (sol/sağ aynı mesh), `caster`, `camera_mast`, `lidar`, `camera`, `imu` |
 | Dosya yolu | `src/serabot_description/meshes/<link>.<ext>`; kaynak `src/serabot_description/meshes/source/serabot.blend` |
 | URDF referansı | `package://serabot_description/meshes/<link>.<ext>` |
-| Format | **`.glb`** (glTF binary; renk/malzeme gömülü, doku kullanılacaksa gömülü). Yedek: `.obj` + `.mtl` (aynı klasörde, aynı ad). Blender 5.2'de `.dae` yok (ADR-015). RViz2 + Gazebo Jetty'de renkli yükleme ⚠ doğrulanacak (Üye B VM) |
-| glTF dışa aktarım | Format: glTF Binary; Apply Modifiers açık; sadece seçili nesne (link başına bir dosya); malzemeler Principled BSDF. `+Y Up` seçeneği varsayılan (açık) bırakılır; yön testi aksini gösterirse kapatılır veya URDF `visual` `origin` rpy ile düzeltilir — karar buraya yazılır |
-| Yön ve renk testi | İlk mesh'ten önce: +X yönünü gösteren kırmızı ok ve +Z'de mavi tepe işareti olan bir test küpü `.glb` ve `.obj` olarak dışa aktarılır; Üye B'nin VM'inde RViz2 ve Gazebo'da açılıp yön ve renkler kontrol edilir (⚠ doğrulanacak) |
+| Format | **`.obj` + `.mtl`** (aynı klasörde, aynı ad; renkler MTL diffuse). `.glb` kullanılmaz: RViz2 ve Gazebo Jetty glTF eksen dönüşümünü farklı uyguluyor (ADR-015, yön testi). Blender 5.2'de `.dae` yok |
+| OBJ dışa aktarım | S1'in test küpündeki ayarlar (`blender/make_orientation_test.py`): Blender ham eksenleri (Forward/Up dönüşümü yok — dosyada Z yukarı), Apply Modifiers açık, sadece seçili nesne (link başına bir dosya), malzemeler MTL'e yazılır |
+| Yön ve renk testi | ✅ 2026-10-24, Üye A VM (Docker, Lyrical + Jetty 10.5.0): `orientation_cube.obj` RViz2 **ve** Gazebo'da doğru yön ve renkte. `glb_yup` yalnız RViz2'de, `glb_zup` yalnız Gazebo'da doğru |
 | Poligon bütçesi | Robot toplamı ≤ 50k üçgen (VM'de akıcı simülasyon için) |
 | Çarpışma | Mesh kullanılmaz; §4'teki boyutlarla primitif geometri |
 | Dış ölçüler | Mesh'in sınır kutusu §4'teki boyutlara uyar (görsel ile çarpışma modeli örtüşmeli) |
