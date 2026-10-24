@@ -1,16 +1,40 @@
 <?xml version="1.0"?>
 <!--
-  PLACEHOLDER created by S0 so the top-level xacro builds.
-  Owner: S1 (robot model) - replace the macro body; keep the macro name and parameters
-  (they are part of the contract used by serabot.urdf.xacro).
+  SeraBot camera mast (owner: S1). Only the mounting post; the camera itself is
+  defined in sensors/camera.xacro on top of camera_mast_link (camera_z above it).
+  camera_mast_link sits at the foot of the mast, on the chassis top face.
+  Macro name and parameters are part of the contract (docs/INTERFACES.md section 8).
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="properties.xacro"/>
+  <xacro:include filename="materials.xacro"/>
+  <xacro:include filename="inertial_macros.xacro"/>
+
   <xacro:macro name="serabot_camera_mast">
     <joint name="camera_mast_joint" type="fixed">
       <parent link="base_link"/>
       <child link="camera_mast_link"/>
-      <origin xyz="-0.15 0 0.06" rpy="0 0 0"/>
+      <origin xyz="${mast_x} 0 ${mast_z}" rpy="0 0 0"/>
     </joint>
-    <link name="camera_mast_link"/>
+
+    <link name="camera_mast_link">
+      <visual>
+        <origin xyz="0 0 ${mast_height / 2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${mast_radius}" length="${mast_height}"/>
+        </geometry>
+        <xacro:serabot_material name="dark"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${mast_height / 2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${mast_radius}" length="${mast_height}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_cylinder mass="${mast_mass}" radius="${mast_radius}"
+                               length="${mast_height}" xyz="0 0 ${mast_height / 2}"/>
+    </link>
   </xacro:macro>
+
 </robot>

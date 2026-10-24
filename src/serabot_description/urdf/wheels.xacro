@@ -1,11 +1,77 @@
 <?xml version="1.0"?>
 <!--
-  PLACEHOLDER created by S0 so the top-level xacro builds.
-  Owner: S1 (robot model) - replace the macro body; keep the macro name and parameters
-  (they are part of the contract used by serabot.urdf.xacro).
+  SeraBot drive wheels and caster (owner: S1).
+  Macro name and parameters are part of the contract (docs/INTERFACES.md section 8).
+  Wheel joints rotate about +Y, so a positive joint velocity drives the robot forward.
+  Friction settings live in gazebo_drive.xacro.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="serabot_wheels">
 
+  <xacro:include filename="properties.xacro"/>
+  <xacro:include filename="materials.xacro"/>
+  <xacro:include filename="inertial_macros.xacro"/>
+
+  <!-- One drive wheel; side is "left" or "right", y_sign is +1 (left) or -1 (right). -->
+  <xacro:macro name="serabot_wheel" params="side y_sign">
+    <joint name="${side}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${side}_wheel_link"/>
+      <origin xyz="${wheel_x} ${y_sign * wheel_separation / 2} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+
+    <link name="${side}_wheel_link">
+      <visual name="tire">
+        <origin xyz="0 0 0" rpy="${pi / 2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <xacro:serabot_material name="rubber"/>
+      </visual>
+      <visual name="hub">
+        <origin xyz="0 ${y_sign * wheel_width / 4} 0" rpy="${pi / 2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius / 2}" length="${wheel_width / 2 + 0.002}"/>
+        </geometry>
+        <xacro:serabot_material name="terracotta"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi / 2} 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_cylinder mass="${wheel_mass}" radius="${wheel_radius}"
+                               length="${wheel_width}" rpy="${pi / 2} 0 0"/>
+    </link>
   </xacro:macro>
+
+  <xacro:macro name="serabot_wheels">
+    <xacro:serabot_wheel side="left" y_sign="1"/>
+    <xacro:serabot_wheel side="right" y_sign="-1"/>
+
+    <joint name="caster_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="caster_link"/>
+      <origin xyz="${caster_x} 0 ${caster_z}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="caster_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+        <xacro:serabot_material name="grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_sphere mass="${caster_mass}" radius="${caster_radius}"/>
+    </link>
+  </xacro:macro>
+
 </robot>

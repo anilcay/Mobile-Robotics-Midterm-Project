@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!--
+  SeraBot dimensions, masses and mount points (owner: S1).
+  Values marked "contract" come from docs/INTERFACES.md section 4; other modules rely
+  on them, so change them only through an interface change. The file only defines
+  properties, so it is safe to include from several xacro files.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Chassis box, centred on base_link (contract) -->
+  <xacro:property name="chassis_length" value="0.45"/>
+  <xacro:property name="chassis_width" value="0.30"/>
+  <xacro:property name="chassis_height" value="0.12"/>
+  <xacro:property name="chassis_mass" value="6.0"/>
+
+  <!-- Drive wheels (contract) -->
+  <xacro:property name="wheel_radius" value="0.08"/>
+  <xacro:property name="wheel_width" value="0.04"/>
+  <xacro:property name="wheel_separation" value="0.36"/>
+  <xacro:property name="wheel_x" value="-0.12"/>
+  <xacro:property name="wheel_mass" value="0.5"/>
+  <xacro:property name="wheel_mu" value="1.0"/>
+
+  <!-- base_link sits at axle height above base_footprint (contract) -->
+  <xacro:property name="base_height" value="${wheel_radius}"/>
+
+  <!-- Frictionless caster sphere touching the ground (contract) -->
+  <xacro:property name="caster_radius" value="0.03"/>
+  <xacro:property name="caster_x" value="0.17"/>
+  <xacro:property name="caster_z" value="${caster_radius - base_height}"/>
+  <xacro:property name="caster_mass" value="0.1"/>
+  <xacro:property name="caster_mu" value="0.0"/>
+
+  <!-- Camera mast, standing on the chassis top face (contract) -->
+  <xacro:property name="mast_x" value="-0.15"/>
+  <xacro:property name="mast_z" value="${chassis_height / 2}"/>
+  <xacro:property name="mast_height" value="0.30"/>
+  <xacro:property name="mast_radius" value="0.015"/>
+  <xacro:property name="mast_mass" value="0.3"/>
+
+  <!-- Front bumper strip (visual only, protrudes slightly to avoid z-fighting) -->
+  <xacro:property name="bumper_depth" value="0.02"/>
+  <xacro:property name="bumper_height" value="0.04"/>
+  <xacro:property name="bumper_protrusion" value="0.002"/>
+  <xacro:property name="bumper_z" value="-0.02"/>
+
+  <!-- Sensor mount points used by urdf/sensors/*.xacro (contract) -->
+  <xacro:property name="lidar_x" value="0.10"/>
+  <xacro:property name="lidar_y" value="0.0"/>
+  <xacro:property name="lidar_z" value="0.10"/>
+  <xacro:property name="imu_x" value="0.0"/>
+  <xacro:property name="imu_y" value="0.0"/>
+  <xacro:property name="imu_z" value="0.0"/>
+  <xacro:property name="camera_z" value="${mast_height}"/>
+
+  <!-- DiffDrive limits (simulation tuning, not part of the contract) -->
+  <xacro:property name="drive_odom_rate" value="30"/>
+  <xacro:property name="drive_max_linear_accel" value="1.0"/>
+  <xacro:property name="drive_max_angular_accel" value="3.0"/>
+
+</robot>

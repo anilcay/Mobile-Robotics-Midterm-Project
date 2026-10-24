@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!--
+  Inertia macros for solid primitives (owner: S1). Each macro emits a complete
+  <inertial> block; xyz/rpy place the body frame (cylinder axis = local Z).
+  Only macros are defined here, so the file is safe to include several times.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="inertial_box" params="mass x y z xyz:='0 0 0' rpy:='0 0 0'">
+    <inertial>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <mass value="${mass}"/>
+      <inertia ixx="${mass * (y * y + z * z) / 12}" ixy="0" ixz="0"
+               iyy="${mass * (x * x + z * z) / 12}" iyz="0"
+               izz="${mass * (x * x + y * y) / 12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_cylinder" params="mass radius length xyz:='0 0 0' rpy:='0 0 0'">
+    <inertial>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <mass value="${mass}"/>
+      <inertia ixx="${mass * (3 * radius * radius + length * length) / 12}" ixy="0" ixz="0"
+               iyy="${mass * (3 * radius * radius + length * length) / 12}" iyz="0"
+               izz="${mass * radius * radius / 2}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_sphere" params="mass radius xyz:='0 0 0'">
+    <inertial>
+      <origin xyz="${xyz}" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia ixx="${2 * mass * radius * radius / 5}" ixy="0" ixz="0"
+               iyy="${2 * mass * radius * radius / 5}" iyz="0"
+               izz="${2 * mass * radius * radius / 5}"/>
+    </inertial>
+  </xacro:macro>
+
+</robot>
