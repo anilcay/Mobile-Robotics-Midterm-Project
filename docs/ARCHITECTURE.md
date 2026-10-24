@@ -9,7 +9,7 @@ SeraBot, bir seradaki bitki sıraları arasında otonom dolaşan bir denetim rob
 - **Sensör yerleşimi:**
   - LiDAR şasinin üst-önünde; 360° tarama, koridor duvarları ve saksılar bu düzlemde görülür.
   - Kamera arka taraftaki direğin tepesinde, bitki/ürün yüksekliğinde ileri bakar.
-  - IMU şasi merkezinde; dönüş açısı ve hareket ölçümü.
+  - IMU dönme merkezinde (tekerlek aksının ortası); dönüş açısı ve hareket ölçümü.
 
 Boyutlar ve montaj pozisyonları: [INTERFACES.md §4](INTERFACES.md#4-robot-boyutları-ve-montaj-noktaları)
 
@@ -75,7 +75,7 @@ Tüm topic ve mesaj tipleri: [INTERFACES.md](INTERFACES.md)
 ```
 odom                       (DiffDrive, bridge üzerinden /tf)
 └── base_footprint         (zemin seviyesi, robot merkezi)
-    └── base_link          (şasi merkezi, tekerlek aksı yüksekliği)
+    └── base_link          (tekerlek aksının ortası = dönme merkezi)
         ├── left_wheel_link    (continuous)
         ├── right_wheel_link   (continuous)
         ├── caster_link        (fixed)

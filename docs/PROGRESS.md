@@ -23,7 +23,7 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | Modül | Sorumlu | Durum | Not |
 |---|---|---|---|
 | S0 Yönetici / docs | Üye A | Devam | Docs v0.1 hazır |
-| S1 Robot modeli | Üye A | Devam (Windows kısmı tamam) | Primitif URDF + konsept B (Saksı) Blender modeli hazır; CI yeşil. Bekleyen: Üye B VM'inde doğrulama adımları 1–5 (`docs/modules/description.md`), ardından mesh'lerin URDF'e bağlanması |
+| S1 Robot modeli | Üye A | Devam | Primitif URDF + konsept B (Saksı) Blender modeli hazır; Linux doğrulaması 1–5 geçti. Sıradaki: ADR-017 (`base_link` aks ortasına) + `.obj` mesh'lerin URDF'e bağlanması |
 | S2 Simülasyon | Üye A | Başlamadı | |
 | S3a LiDAR | Üye A | Başlamadı | |
 | S3b Kamera | Üye B | Başlamadı | Üye B: Ubuntu VM |
@@ -51,4 +51,4 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | 4 | Commit'lerdeki Claude "Co-Authored-By" satırının ders yapay zekâ politikasına uygunluğu | Üye A | F1 |
 | 5 | Repo lisansı | Üye A | F0 |
 | 6 | ~~Mesh yön/renk testi~~ — tamam, `.obj` + `.mtl` (ADR-015) | — | ✅ |
-| 7 | Odometri ofseti: aks `base_link`'in 0.12 m gerisinde → yerinde dönüşte `/odom` sapıyor (VM'de ölçüldü). Öneri: `base_link`'i aks merkezine taşımak (görünüm değişmez, §4 montaj sayıları kayar). Karar bekliyor | Üye A | Sensörlerden önce |
+| 7 | Odometri ofseti → karar: `base_link` aks ortasına (ADR-017, INTERFACES v0.6). S1 uygulayacak | S1 | Sensörlerden önce |

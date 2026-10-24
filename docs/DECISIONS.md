@@ -95,3 +95,9 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Bağlam:** Üye A'nın VirtualBox VM'inde Ubuntu 20.04 (ROS 1 Noetic, Gazebo Classic) var; Lyrical/Jetty bu sürüme kurulamaz. Yeni bir 26.04 VM kurmak zaman alıyor ve host'ta (7.9 GB RAM) iki VM aynı anda çalışamıyor.
 - **Karar:** Mevcut VM'de Docker ile `ros:lyrical` tabanlı geliştirme imajı (`docker/Dockerfile`, `docker/run.sh`). Claude VM'e SSH anahtarıyla (sadece localhost NAT yönlendirmesi) bağlanır; çalışma ağacı `scripts/sync_to_vm.sh` ile kopyalanır. `sudo` adımlarında şifreyi kullanıcı girer. Ayrıntılar `docs/DEV_ENVIRONMENT.md`.
 - **Sonuç:** Simülasyon testleri Üye B'yi beklemeden Üye A'nın VM'inde yapılabilir (ADR-011'i tamamlar, yerine geçmez). Ortam CI ile aynı taban imajı kullanır. VM'de 3D hızlandırma kapalı olduğundan render yavaş olabilir. Üye B'ye doğrudan Ubuntu 26.04 önerilir; Docker yedek yol.
+
+## ADR-017 — `base_link` tekerlek aksının ortasında
+- **Tarih:** 2026-10-24 · **Durum:** Kabul (ADR'siz önceki "ofset kabul edildi" kararının yerine)
+- **Bağlam:** Aks `base_link`'in 0.12 m gerisindeydi. gz DiffDrive odometriyi dönme merkezi (aks ortası) için hesaplayıp `base_footprint` adıyla yayınlıyor. VM testinde (ADR-016) yerinde dönüşte gövdenin ~0.12 m yarıçaplı yay çizdiği ve `/odom`'un gerçek konumdan ~0.14 m saptığı ölçüldü; RViz'de (`odom` sabit çerçevesi) LiDAR noktaları dönüşlerde kayar, hata birikir.
+- **Karar:** `base_link` (ve `base_footprint`) aks ortasına taşınır. Robotun dış görünüşü ve ölçüleri değişmez; `base_link`'e göre montaj noktaları x'te +0.12 m kayar (`INTERFACES.md` §4, v0.6). IMU dönme merkezine (`x = 0`) yerleşir.
+- **Sonuç:** `odom → base_footprint` fiziksel olarak doğru olur. S1 `properties.xacro`'yu günceller; şasi mesh'i kendi merkezinde kalabilir, ofset `visual` `origin` ile verilir (§4.1 istisnası). Sensör modülleri henüz başlamadığı için başka etkilenen yok.

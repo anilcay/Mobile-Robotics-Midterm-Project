@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.5 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1)
+**Sürüm:** 0.5 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017)
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -91,12 +91,14 @@ Başlangıç değerleri — S1 `properties.xacro`'da bunları kullanır. Diğer 
 | Şasi kütlesi | 6.0 kg |
 | Tekerlek yarıçapı / genişliği | 0.08 m / 0.04 m |
 | Tekerlekler arası mesafe (merkezden merkeze) | 0.36 m |
-| Tekerlek aksı konumu (`base_link`'e göre) | x = -0.12 m |
-| `base_link` yüksekliği (`base_footprint`'e göre) | z = 0.08 m (aks yüksekliği) |
-| Caster | küre, r = 0.03 m, x = +0.17 m, sürtünmesiz |
-| `lidar_link` (`base_link`'e göre) | x = +0.10, z = +0.10 m |
-| `imu_link` (`base_link`'e göre) | x = 0, y = 0, z = 0 |
-| `camera_mast_link` (`base_link`'e göre) | x = -0.15, z = +0.06 m (şasi üstü); direk yüksekliği 0.30 m |
+| `base_link` orijini | **Tekerlek aksının ortası** (dönme merkezi; DiffDrive odometrisiyle uyumlu, ADR-017) |
+| `base_link` yüksekliği (`base_footprint`'e göre) | z = 0.08 m (aks yüksekliği); `base_footprint` aks ortasının zemindeki izdüşümü |
+| Tekerlekler (`base_link`'e göre) | x = 0, y = ±0.18, z = 0 |
+| Şasi kutusu merkezi (`base_link`'e göre) | x = +0.12, z = 0 (şasi x = −0.105 … +0.345) |
+| Caster | küre, r = 0.03 m, x = +0.29, z = −0.05 m, sürtünmesiz |
+| `lidar_link` (`base_link`'e göre) | x = +0.22, z = +0.10 m |
+| `imu_link` (`base_link`'e göre) | x = 0, y = 0, z = 0 (dönme merkezi — dönüşte merkezcil ivme ölçmez) |
+| `camera_mast_link` (`base_link`'e göre) | x = −0.03, z = +0.06 m (şasi üstü); direk yüksekliği 0.30 m |
 | `camera_link` (`camera_mast_link`'e göre) | z = +0.30 m → zeminden ≈ 0.44 m, pitch 0 |
 
 ### 4.1 Mesh kuralları (Blender → URDF)
@@ -105,7 +107,7 @@ Başlangıç değerleri — S1 `properties.xacro`'da bunları kullanır. Diğer 
 |---|---|
 | Birim / ölçek | Metre; Blender'da Unit Scale 1.0, nesnelerde ölçek uygulanmış (Apply Scale) |
 | Eksenler | REP-103: Blender sahnesinde X ileri, Y sol, Z yukarı modellenir. Dışa aktarılan dosyanın RViz2/Gazebo'da doğru yönde açıldığı yön testiyle doğrulanır (aşağıda) |
-| Orijin | Her mesh'in orijini, bağlı olduğu link frame'inin orijininde (örn. tekerlek mesh'i aks merkezinde) |
+| Orijin | Her mesh'in orijini, bağlı olduğu link frame'inin orijininde (örn. tekerlek mesh'i aks merkezinde). İstisna: link orijini parçanın dışındaysa (ADR-017 sonrası `base_link` ↔ şasi) mesh parça merkezinde kalabilir; ofset `visual` `origin` ile `properties.xacro` değerinden verilir |
 | Parçalama | Her link için ayrı mesh dosyası: `chassis`, `wheel` (sol/sağ aynı mesh), `caster`, `camera_mast`, `lidar`, `camera`, `imu` |
 | Dosya yolu | `src/serabot_description/meshes/<link>.<ext>`; kaynak `src/serabot_description/meshes/source/serabot.blend` |
 | URDF referansı | `package://serabot_description/meshes/<link>.<ext>` |
