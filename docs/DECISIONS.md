@@ -70,7 +70,7 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Tarih:** 2026-10-24 · **Durum:** Kabul
 - **Bağlam:** Ekip tasarımın kaliteli ve özgün görünmesini istiyor; robot modeli oturumu (S1) Blender'a bağlanarak (Blender MCP) çalışacak.
 - **Karar:** Her link'in `visual` geometrisi Blender'da modellenen mesh; `collision` geometrisi kutu/silindir/küre primitifleri. Kurallar `INTERFACES.md` §4.1'de (birim, eksen, orijin, format, poligon bütçesi). Kaynak `.blend` dosyası repoda tutulur.
-- **Sonuç:** Görünüm kaliteli, fizik kararlı ve hızlı kalır. Mesh formatının (DAE / glTF / OBJ) hem RViz2 hem Gazebo Jetty'de renkleriyle yüklendiği ⚠ doğrulanacak; doğrulanana kadar boyutlar primitif modelle birebir aynı tutulur, böylece mesh'ler sonradan yerine takılabilir.
+- **Sonuç:** Görünüm kaliteli, fizik kararlı ve hızlı kalır. Mesh formatının (DAE / glTF / OBJ) hem RViz2 hem Gazebo Jetty'de renkleriyle yüklendiği ⚠ doğrulanacak; doğrulanana kadar boyutlar primitif modelle birebir aynı tutulur, böylece mesh'ler sonradan yerine takılabilir. *Format kısmı ADR-015 ile güncellendi.*
 
 ## ADR-013 — Paket iskeleti kuralları
 - **Tarih:** 2026-10-24 · **Durum:** Kabul
@@ -82,3 +82,9 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Tarih:** 2026-10-24 · **Durum:** Kabul
 - **Karar:** Her push (main) ve PR'da `ros:lyrical` konteynerinde: `rosdep install` → `colcon build` → `xacro` + `check_urdf` → `colcon test`.
 - **Sonuç:** Linux tarafındaki derleme/URDF hataları Üye B'nin VM'ine gerek kalmadan yakalanır. Simülasyon davranışı CI kapsamında değildir.
+
+## ADR-015 — Mesh formatı: `.glb`, yedek `.obj` + `.mtl`
+- **Tarih:** 2026-10-24 · **Durum:** Kabul (Linux doğrulaması bekliyor)
+- **Bağlam:** S1, kullanılan Blender 5.2.3'te Collada (`.dae`) dışa aktarımının olmadığını tespit etti; mevcut seçenekler glTF/GLB, OBJ, FBX, STL, PLY, USD. STL renk taşımaz, FBX/USD'nin RViz2 desteği belirsiz.
+- **Karar:** Görsel mesh'ler glTF Binary (`.glb`) olarak dışa aktarılır; renk ve malzeme tek dosyada gömülüdür. Gazebo Jetty glTF'yi destekler; RViz2 `.dae`/`.stl` dışındaki formatları assimp ile yükler. Yükleme veya yön sorunu çıkarsa yedek `.obj` + `.mtl`. Ayrıntılar `INTERFACES.md` §4.1.
+- **Sonuç:** Gerçek mesh'lerden önce bir yön/renk test küpü Üye B'nin VM'inde iki formatta denenir; glTF'nin Y-up ekseninin doğru çevrildiği bu testle belirlenir. Test sonucu §4.1'e ve bu kayda yazılır.
