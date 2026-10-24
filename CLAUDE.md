@@ -52,7 +52,9 @@ Geliştirme şu an **Windows 10** üzerinde yapılıyor; ROS 2 / Gazebo yerelde 
 - Yerelde yapılabilen kontroller yapılır:
   - Python sözdizimi: `python -m py_compile <dosya>`
   - Saf mantık testleri (ROS'suz): `python -m pytest src/serabot_behavior/test`
-  - Xacro → URDF dönüşümü: `pip install xacro` sonrası `xacro src/serabot_description/urdf/serabot.urdf.xacro` (paket yolu çözümü için gerekirse geçici çözüm modül dosyasında not edilir)
+  - Stil: `python -m flake8 --max-line-length 99 src/`
+  - Xacro → URDF dönüşümü (urdf klasöründen): `python -c "import sys, xacro; sys.argv=['xacro','serabot.urdf.xacro']; xacro.main()"` — xacro include'ları göreli yazılır, `$(find ...)` kullanılmaz; böylece ROS'suz kontrol edilebilir.
+  - Araçlar (`xacro`, `flake8`, `pytest`) Windows'ta `pip install --user` ile kurulu.
 - Linux'ta doğrulanamayan her şey modül dosyasında **"Linux'ta doğrulanmadı"** olarak işaretlenir. Asla "çalışıyor" denmez; "derleniyor / testi geçiyor / doğrulanmadı" diye net yazılır.
 - GitHub Actions CI (`ros:lyrical` imajı) ile `colcon build` + testler.
 - Simülasyon testi **Üye B'nin Ubuntu sanal makinesinde** yapılır (ADR-011). Gazebo'da denenmesi gereken şeyler için modül dosyasına Üye B'nin çalıştıracağı net komutları ve beklenen sonucu yaz.
@@ -74,12 +76,13 @@ Geliştirme şu an **Windows 10** üzerinde yapılıyor; ROS 2 / Gazebo yerelde 
 - PEP 8, tip ipuçları, kısa docstring'ler.
 - Karar/işleme mantığı ROS'tan bağımsız saf fonksiyon/sınıf olarak ayrı modülde (örn. `logic.py`) yazılır; node dosyası sadece ROS bağlantısı (abonelik, yayın, parametre) yapar. Saf mantık için pytest testi yazılır.
 - Sensör aboneliklerinde `qos_profile_sensor_data` kullanılır.
-- Her node `main()` fonksiyonu ile `setup.py` `entry_points` üzerinden çalıştırılır.
+- Her node `main()` fonksiyonu ile `setup.py` `entry_points` üzerinden çalıştırılır. Entry point'ler S0 tarafından önceden kayıtlıdır (`color_detector`, `imu_monitor`, `behavior_node`); yeni node gerekiyorsa açık istek yaz.
 
 **URDF/Xacro:**
 - Boyutlar ve kütleler `properties.xacro` içinde `xacro:property` olarak tanımlanır; sihirli sayı yok.
 - Her link'in `visual`, `collision` ve geçerli `inertial` bloğu olur (inertia makrosu kullanılır).
 - Her sensör kendi dosyasında (`urdf/sensors/<sensör>.xacro`) bir xacro makrosu olarak tanımlanır; link, joint ve `<gazebo>` sensör bloğu bu dosyadadır.
+- Ana xacro'nun çağırdığı makro adları ve parametreleri sözleşmedir (`INTERFACES.md` §8). S0'ın oluşturduğu `PLACEHOLDER` dosyalarında sadece makro gövdesi değiştirilir.
 - Görsel modeller Blender'da hazırlanan mesh'lerdir; çarpışma modelleri primitiftir. Mesh kuralları: `INTERFACES.md` §4.1 (ADR-012).
 - Gazebo dünyaları sadece primitif geometri kullanır (internetten Fuel modeli indirilmez).
 

@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+  SeraBot - top-level robot description.
+  Owner: S0 (manager session). Module owners edit only their included files;
+  see CLAUDE.md for the ownership table and docs/INTERFACES.md for the contract.
+  Includes are relative so the file can also be checked with plain `xacro`
+  outside a ROS environment.
+-->
+<robot name="serabot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="use_lidar" default="true"/>
+  <xacro:arg name="use_camera" default="true"/>
+  <xacro:arg name="use_imu" default="true"/>
+
+  <!-- Robot body (owner: S1) -->
+  <xacro:include filename="chassis.xacro"/>
+  <xacro:include filename="wheels.xacro"/>
+  <xacro:include filename="camera_mast.xacro"/>
+  <xacro:include filename="gazebo_drive.xacro"/>
+
+  <!-- Sensors (owners: LiDAR = Member A, camera = Member B, IMU = shared) -->
+  <xacro:include filename="sensors/lidar.xacro"/>
+  <xacro:include filename="sensors/camera.xacro"/>
+  <xacro:include filename="sensors/imu.xacro"/>
+
+  <xacro:serabot_chassis/>
+  <xacro:serabot_wheels/>
+  <xacro:serabot_camera_mast/>
+  <xacro:serabot_gazebo_drive/>
+
+  <xacro:if value="$(arg use_lidar)">
+    <xacro:serabot_lidar parent="base_link"/>
+  </xacro:if>
+  <xacro:if value="$(arg use_camera)">
+    <xacro:serabot_camera parent="camera_mast_link"/>
+  </xacro:if>
+  <xacro:if value="$(arg use_imu)">
+    <xacro:serabot_imu parent="base_link"/>
+  </xacro:if>
+
+</robot>

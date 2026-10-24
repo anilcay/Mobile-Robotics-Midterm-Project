@@ -34,6 +34,7 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 
 - 2026-10-24 — Proje dökümanı analiz edildi, senaryo (SeraBot), mimari, sensör seti ve plan belirlendi.
 - 2026-10-24 — `CLAUDE.md`, `docs/` (REQUIREMENTS, ARCHITECTURE, INTERFACES, DECISIONS, PROGRESS, modül dosyaları) oluşturuldu.
+- 2026-10-24 — 5 paketin iskeleti, ana xacro + placeholder makrolar, RViz config (`serabot.rviz`), GitHub Actions CI eklendi. Statik kontroller (xacro, flake8, XML/YAML) Windows'ta geçti; RViz config Linux'ta doğrulanmadı.
 
 ## Açık konular / riskler
 

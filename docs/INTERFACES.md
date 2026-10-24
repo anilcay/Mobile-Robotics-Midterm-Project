@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.2 (taslak) — 2026-10-24 · 0.2: mesh kuralları eklendi (§4.1, ADR-012)
+**Sürüm:** 0.3 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8)
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -155,3 +155,21 @@ Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu`
 | `inspect_area` | 0.08 | oran |
 | `inspect_duration` | 3.0 | s |
 | `control_rate` | 10.0 | Hz |
+
+## 8. Xacro makro sözleşmesi
+
+`src/serabot_description/urdf/serabot.urdf.xacro` (S0) aşağıdaki dosyaları göreli yolla include eder ve makroları çağırır. Dosyalar şu an `PLACEHOLDER`; sahipleri sadece makro gövdesini doldurur.
+
+| Dosya | Makro | Parametre | Oluşturması gereken | Sahip |
+|---|---|---|---|---|
+| `chassis.xacro` | `serabot_chassis` | — | `base_footprint`, `base_link`, `base_joint` | S1 |
+| `wheels.xacro` | `serabot_wheels` | — | `left/right_wheel_link`, `left/right_wheel_joint`, `caster_link`, `caster_joint` | S1 |
+| `camera_mast.xacro` | `serabot_camera_mast` | — | `camera_mast_link`, `camera_mast_joint` | S1 |
+| `gazebo_drive.xacro` | `serabot_gazebo_drive` | — | DiffDrive + JointStatePublisher `<gazebo>` blokları | S1 |
+| `sensors/lidar.xacro` | `serabot_lidar` | `parent` (= `base_link`) | `lidar_link`, `lidar_joint`, gpu_lidar sensörü | Üye A |
+| `sensors/camera.xacro` | `serabot_camera` | `parent` (= `camera_mast_link`) | `camera_link`, `camera_optical_link`, joint'ler, camera sensörü | Üye B |
+| `sensors/imu.xacro` | `serabot_imu` | `parent` (= `base_link`) | `imu_link`, `imu_joint`, imu sensörü | Ortak |
+
+Ortak yardımcılar (`properties.xacro`, `materials.xacro`, `inertial_macros.xacro`) S1'e aittir; diğer xacro dosyaları bunları kendi içinden göreli yolla include eder (xacro aynı dosyanın tekrar include edilmesine izin verir).
+
+Gazebo kaynak yolu: `serabot_description` ve `serabot_gazebo` paketleri, ortam kancası (`hooks/*.dsv.in`) ile `GZ_SIM_RESOURCE_PATH`'e eklenir; böylece `package://serabot_description/meshes/...` ve `model://...` URI'leri Gazebo'da çözülür (⚠ doğrulanacak).

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    container:
+      image: ros:lyrical
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          path: src/repo
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          rosdep update --rosdistro "$ROS_DISTRO"
+          rosdep install --from-paths src --ignore-src --rosdistro "$ROS_DISTRO" -y
+          apt-get install -y --no-install-recommends liburdfdom-tools
+
+      - name: Build
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          colcon build --event-handlers console_cohesion+
+
+      - name: Check robot description
+        run: |
+          source install/setup.bash
+          xacro "$(ros2 pkg prefix --share serabot_description)/urdf/serabot.urdf.xacro" > serabot.urdf
+          check_urdf serabot.urdf
+
+      - name: Test
+        run: |
+          source install/setup.bash
+          colcon test --event-handlers console_cohesion+
+          colcon test-result --verbose
