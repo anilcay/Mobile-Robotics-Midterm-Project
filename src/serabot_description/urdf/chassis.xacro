@@ -2,7 +2,9 @@
 <!--
   SeraBot chassis (owner: S1): base_footprint, base_link and the chassis body.
   Macro name and parameters are part of the contract (docs/INTERFACES.md section 8).
-  Primitive visuals for now; they will be replaced by Blender meshes (ADR-012).
+  base_link is the middle of the wheel axle (ADR-017); the chassis box is centred
+  chassis_x ahead of it. The chassis mesh is modelled around its own centre, so its
+  visual origin carries the same offset (INTERFACES.md section 4.1 exception).
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
@@ -20,28 +22,38 @@
     </joint>
 
     <link name="base_link">
-      <visual name="chassis_body">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
-        </geometry>
-        <xacro:serabot_material name="green"/>
-      </visual>
-      <visual name="front_bumper">
-        <origin xyz="${chassis_length / 2 - bumper_depth / 2 + bumper_protrusion} 0 ${bumper_z}"
-                rpy="0 0 0"/>
-        <geometry>
-          <box size="${bumper_depth} ${chassis_width + 2 * bumper_protrusion} ${bumper_height}"/>
-        </geometry>
-        <xacro:serabot_material name="terracotta"/>
-      </visual>
+      <xacro:if value="${use_mesh_visuals}">
+        <visual name="chassis">
+          <origin xyz="${chassis_x} 0 0" rpy="0 0 0"/>
+          <geometry>
+            <mesh filename="${mesh_dir}/chassis.obj"/>
+          </geometry>
+        </visual>
+      </xacro:if>
+      <xacro:unless value="${use_mesh_visuals}">
+        <visual name="chassis_body">
+          <origin xyz="${chassis_x} 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+          </geometry>
+          <xacro:serabot_material name="green"/>
+        </visual>
+        <visual name="front_bumper">
+          <origin xyz="${chassis_x + chassis_length / 2 - bumper_depth / 2 + bumper_protrusion} 0 ${bumper_z}"
+                  rpy="0 0 0"/>
+          <geometry>
+            <box size="${bumper_depth} ${chassis_width + 2 * bumper_protrusion} ${bumper_height}"/>
+          </geometry>
+          <xacro:serabot_material name="terracotta"/>
+        </visual>
+      </xacro:unless>
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="${chassis_x} 0 0" rpy="0 0 0"/>
         <geometry>
           <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
         </geometry>
       </collision>
-      <xacro:inertial_box mass="${chassis_mass}"
+      <xacro:inertial_box mass="${chassis_mass}" xyz="${chassis_x} 0 0"
                           x="${chassis_length}" y="${chassis_width}" z="${chassis_height}"/>
     </link>
   </xacro:macro>

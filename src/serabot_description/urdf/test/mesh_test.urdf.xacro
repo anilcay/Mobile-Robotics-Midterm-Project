@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <!--
   Mesh orientation / colour test (owner: S1, ADR-015). Not part of the robot.
-  Four objects in a row along Y, each 0.1 m above the ground, should look identical:
+  Two objects in a row along Y, each 0.1 m above the ground, should look identical:
   grey cube, red arrow +X, green arrow +Y, blue cap +Z.
-    y = +0.6  ref_primitive  URDF primitives (ground truth)
-    y = +0.2  glb_yup        orientation_cube_yup.glb (glTF "+Y Up" export)
-    y = -0.2  glb_zup        orientation_cube_zup.glb (raw Blender axes)
-    y = -0.6  obj            orientation_cube.obj + .mtl
+    y = +0.3  ref_primitive  URDF primitives (ground truth)
+    y = -0.3  obj            orientation_cube.obj + .mtl (raw Blender axes)
+  Passed in RViz2 and Gazebo Jetty on 2026-10-24; the .glb variants were dropped
+  because the two tools apply the glTF axis conversion differently.
   RViz:   ros2 launch serabot_description display.launch.py model:=test/mesh_test.urdf.xacro
   Meshes: src/serabot_description/blender/make_orientation_test.py
 -->
@@ -46,7 +46,7 @@
 
   <link name="base_footprint"/>
 
-  <xacro:test_object name="ref_primitive" y="0.6">
+  <xacro:test_object name="ref_primitive" y="0.3">
     <visuals>
       <visual>
         <geometry>
@@ -82,19 +82,7 @@
     </visuals>
   </xacro:test_object>
 
-  <xacro:test_object name="glb_yup" y="0.2">
-    <visuals>
-      <xacro:mesh_visual file="orientation_cube_yup.glb"/>
-    </visuals>
-  </xacro:test_object>
-
-  <xacro:test_object name="glb_zup" y="-0.2">
-    <visuals>
-      <xacro:mesh_visual file="orientation_cube_zup.glb"/>
-    </visuals>
-  </xacro:test_object>
-
-  <xacro:test_object name="obj" y="-0.6">
+  <xacro:test_object name="obj" y="-0.3">
     <visuals>
       <xacro:mesh_visual file="orientation_cube.obj"/>
     </visuals>

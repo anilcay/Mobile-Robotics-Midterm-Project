@@ -19,13 +19,23 @@
     </joint>
 
     <link name="camera_mast_link">
-      <visual>
-        <origin xyz="0 0 ${mast_height / 2}" rpy="0 0 0"/>
-        <geometry>
-          <cylinder radius="${mast_radius}" length="${mast_height}"/>
-        </geometry>
-        <xacro:serabot_material name="dark"/>
-      </visual>
+      <xacro:if value="${use_mesh_visuals}">
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <mesh filename="${mesh_dir}/camera_mast.obj"/>
+          </geometry>
+        </visual>
+      </xacro:if>
+      <xacro:unless value="${use_mesh_visuals}">
+        <visual>
+          <origin xyz="0 0 ${mast_height / 2}" rpy="0 0 0"/>
+          <geometry>
+            <cylinder radius="${mast_radius}" length="${mast_height}"/>
+          </geometry>
+          <xacro:serabot_material name="dark"/>
+        </visual>
+      </xacro:unless>
       <collision>
         <origin xyz="0 0 ${mast_height / 2}" rpy="0 0 0"/>
         <geometry>

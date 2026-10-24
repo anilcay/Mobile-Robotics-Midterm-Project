@@ -28,8 +28,8 @@ def material(name: str, rgb: Vec3, roughness: float = 0.6,
     """Return a Principled BSDF material with a plain base colour (linear RGB)."""
     mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     mat.use_nodes = True
-    # Single-sided (glTF doubleSided=false): sensors sitting inside their own housing
-    # must not see its inner faces in Gazebo.
+    # Single-sided in Blender previews; sensors sitting inside their own housing must
+    # not see its inner faces in Gazebo (OBJ itself carries no culling flag).
     mat.use_backface_culling = True
     bsdf = mat.node_tree.nodes.get('Principled BSDF')
     bsdf.inputs['Base Color'].default_value = (*rgb, 1.0)
@@ -185,24 +185,21 @@ def triangle_count(objects: Iterable[bpy.types.Object]) -> int:
 
 
 def _select_only(obj: bpy.types.Object) -> None:
+    # Refresh after objects were removed, otherwise stale (None) entries remain.
+    bpy.context.view_layer.update()
     for o in bpy.context.view_layer.objects:
-        o.select_set(False)
+        if o is not None:
+            o.select_set(False)
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
 
 
-def export_glb(obj: bpy.types.Object, path: str, yup: bool = True) -> str:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    _select_only(obj)
-    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True,
-                              export_apply=True, export_yup=yup, export_materials='EXPORT',
-                              export_animations=False, export_cameras=False,
-                              export_lights=False)
-    return path
-
-
 def export_obj(obj: bpy.types.Object, path: str) -> str:
-    """OBJ + MTL with Blender axes kept as-is (Z up, Y forward = identity)."""
+    """OBJ + MTL with Blender axes kept as-is (Z up, Y forward = identity).
+
+    The project mesh format (ADR-015): loads with the right axes and colours in both
+    RViz2 and Gazebo Jetty.
+    """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     _select_only(obj)
     bpy.ops.wm.obj_export(filepath=path, export_selected_objects=True, forward_axis='Y',
