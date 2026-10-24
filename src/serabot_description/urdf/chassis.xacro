@@ -1,17 +1,49 @@
 <?xml version="1.0"?>
 <!--
-  PLACEHOLDER created by S0 so the top-level xacro builds.
-  Owner: S1 (robot model) - replace the macro body; keep the macro name and parameters
-  (they are part of the contract used by serabot.urdf.xacro).
+  SeraBot chassis (owner: S1): base_footprint, base_link and the chassis body.
+  Macro name and parameters are part of the contract (docs/INTERFACES.md section 8).
+  Primitive visuals for now; they will be replaced by Blender meshes (ADR-012).
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="properties.xacro"/>
+  <xacro:include filename="materials.xacro"/>
+  <xacro:include filename="inertial_macros.xacro"/>
+
   <xacro:macro name="serabot_chassis">
     <link name="base_footprint"/>
+
     <joint name="base_joint" type="fixed">
       <parent link="base_footprint"/>
       <child link="base_link"/>
-      <origin xyz="0 0 0.08" rpy="0 0 0"/>
+      <origin xyz="0 0 ${base_height}" rpy="0 0 0"/>
     </joint>
-    <link name="base_link"/>
+
+    <link name="base_link">
+      <visual name="chassis_body">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+        </geometry>
+        <xacro:serabot_material name="green"/>
+      </visual>
+      <visual name="front_bumper">
+        <origin xyz="${chassis_length / 2 - bumper_depth / 2 + bumper_protrusion} 0 ${bumper_z}"
+                rpy="0 0 0"/>
+        <geometry>
+          <box size="${bumper_depth} ${chassis_width + 2 * bumper_protrusion} ${bumper_height}"/>
+        </geometry>
+        <xacro:serabot_material name="terracotta"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_box mass="${chassis_mass}"
+                          x="${chassis_length}" y="${chassis_width}" z="${chassis_height}"/>
+    </link>
   </xacro:macro>
+
 </robot>

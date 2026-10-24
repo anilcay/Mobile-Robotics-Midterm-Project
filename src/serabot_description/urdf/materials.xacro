@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  SeraBot colour palette (owner: S1). Materials are emitted inline inside each
+  <visual> via the serabot_material macro instead of as top-level elements, so the
+  file can be included from several xacro files without duplicate material names.
+  sdformat converts the URDF colour into the Gazebo visual material.
+
+  Usage inside a <visual>:  <xacro:serabot_material name="green"/>
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="serabot_colors" value="${dict(
+      green='0.18 0.52 0.24 1.0',
+      leaf='0.55 0.78 0.30 1.0',
+      terracotta='0.82 0.40 0.18 1.0',
+      dark='0.16 0.17 0.18 1.0',
+      grey='0.62 0.64 0.66 1.0',
+      rubber='0.05 0.05 0.05 1.0',
+      red='0.80 0.10 0.10 1.0')}"/>
+
+  <xacro:macro name="serabot_material" params="name">
+    <material name="serabot_${name}">
+      <color rgba="${serabot_colors[name]}"/>
+    </material>
+  </xacro:macro>
+
+</robot>
