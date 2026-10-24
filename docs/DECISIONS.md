@@ -88,3 +88,10 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Bağlam:** S1, kullanılan Blender 5.2.3'te Collada (`.dae`) dışa aktarımının olmadığını tespit etti; mevcut seçenekler glTF/GLB, OBJ, FBX, STL, PLY, USD. STL renk taşımaz, FBX/USD'nin RViz2 desteği belirsiz.
 - **Karar:** Görsel mesh'ler glTF Binary (`.glb`) olarak dışa aktarılır; renk ve malzeme tek dosyada gömülüdür. Gazebo Jetty glTF'yi destekler; RViz2 `.dae`/`.stl` dışındaki formatları assimp ile yükler. Yükleme veya yön sorunu çıkarsa yedek `.obj` + `.mtl`. Ayrıntılar `INTERFACES.md` §4.1.
 - **Sonuç:** Gerçek mesh'lerden önce bir yön/renk test küpü Üye B'nin VM'inde iki formatta denenir; glTF'nin Y-up ekseninin doğru çevrildiği bu testle belirlenir. Test sonucu §4.1'e ve bu kayda yazılır.
+- **Test sonucu (2026-10-24, Üye A VM, Docker — ADR-016):** RViz2'de `glb_yup` ve `obj` doğru, `glb_zup` 90° dönük; Gazebo Jetty 10.5.0'da `glb_zup` ve `obj` doğru, `glb_yup` dönük. Renkler hepsinde yükleniyor, Gazebo'da "dosya bulunamadı" hatası yok (`package://` + `GZ_SIM_RESOURCE_PATH` kancası doğrulandı). **Karar: yedek format `.obj` + `.mtl` birincil oldu**; `.glb` kullanılmaz.
+
+## ADR-016 — Docker tabanlı Lyrical ortamı ve Üye A'nın test VM'i
+- **Tarih:** 2026-10-24 · **Durum:** Kabul
+- **Bağlam:** Üye A'nın VirtualBox VM'inde Ubuntu 20.04 (ROS 1 Noetic, Gazebo Classic) var; Lyrical/Jetty bu sürüme kurulamaz. Yeni bir 26.04 VM kurmak zaman alıyor ve host'ta (7.9 GB RAM) iki VM aynı anda çalışamıyor.
+- **Karar:** Mevcut VM'de Docker ile `ros:lyrical` tabanlı geliştirme imajı (`docker/Dockerfile`, `docker/run.sh`). Claude VM'e SSH anahtarıyla (sadece localhost NAT yönlendirmesi) bağlanır; çalışma ağacı `scripts/sync_to_vm.sh` ile kopyalanır. `sudo` adımlarında şifreyi kullanıcı girer. Ayrıntılar `docs/DEV_ENVIRONMENT.md`.
+- **Sonuç:** Simülasyon testleri Üye B'yi beklemeden Üye A'nın VM'inde yapılabilir (ADR-011'i tamamlar, yerine geçmez). Ortam CI ile aynı taban imajı kullanır. VM'de 3D hızlandırma kapalı olduğundan render yavaş olabilir. Üye B'ye doğrudan Ubuntu 26.04 önerilir; Docker yedek yol.

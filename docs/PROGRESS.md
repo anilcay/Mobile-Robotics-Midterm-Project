@@ -16,7 +16,7 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | F5 Rapor | 5–7 Kas | Rapor 7 Kasım'da teslim (son tarih 8 Kasım 23:59) | Başlamadı |
 | Sunum | 9 Kas 11:10 | 8 dk sunum + demo, 2 dk soru | — |
 
-**Kritik tarih:** En geç **30 Ekim**'de Üye B'nin sanal makinesinde Ubuntu 26.04 + Lyrical + Jetty kurulu ve Gazebo çalışıyor olmalı (ADR-011).
+**Linux ortamı:** Üye A VM'inde Docker ile hazır (ADR-016). Üye B kendi ortamını en geç 30 Ekim'de kurmalı (kamera geliştirmesi).
 
 ## Modül durumu
 
@@ -38,14 +38,17 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 - 2026-10-24 — CI yeşil (`2c66c08`): build, xacro + check_urdf, colcon test.
 - 2026-10-24 — Mesh formatı `.glb` (yedek `.obj`) olarak belirlendi (ADR-015); S1 Blender 5.2.3'e yerel köprüyle bağlandı.
 - 2026-10-24 — S1: primitif robot modeli, `display.launch.py`, konsept B (Saksı) Blender modeli (15.6k üçgen), yön/renk test küpü (`9ba0913`, `e343019`; CI yeşil). S0 incelemesi: TF ağacı, tekerlek eksenleri ve DiffDrive parametreleri sözleşmeyle uyumlu. S1 açık isteği uygulandı: `.gitignore`'a `*.blend1`.
+- 2026-10-24 — **Linux test ortamı hazır (ADR-016):** Üye A'nın VM'inde Docker ile Lyrical + Gazebo Jetty 10.5.0; Claude SSH ile erişiyor (`docs/DEV_ENVIRONMENT.md`). `colcon build` + `colcon test` geçti.
+- 2026-10-24 — **S1 Linux doğrulaması (S0 tarafından, VM):** adım 1 `check_urdf` ✅; adım 2 RViz model görüntüsü ✅; adım 3 SDF + sürtünme (caster `mu`=0, tekerlek 1) ✅; adım 4 Gazebo'da spawn, ileri sürüş ve dönüş, `/odom`, `/tf`, `/joint_states` ✅ (yerinde dönüşte gövde ~0.12 m yarıçaplı yay çiziyor — odometri ofseti, aşağıdaki açık konu #7); adım 5 mesh yön/renk testi ✅ → format `.obj` + `.mtl` (ADR-015 sonucu, INTERFACES v0.5).
 
 ## Açık konular / riskler
 
 | # | Konu | Sahip | Hedef tarih |
 |---|---|---|---|
-| 1 | Üye B'nin VM'inde Linux ortamı (3D hızlandırma açık) — simülasyon testi ve canlı demo için gerekli | Üye B | 30 Eki |
+| 1 | Üye B'nin Linux ortamı (Ubuntu 26.04 önerilir; Docker yedek) — kamera geliştirmesi için. Simülasyon testi artık Üye A VM'inde de yapılabiliyor (ADR-016) | Üye B | 30 Eki |
 | 2 | Üye B'nin adı, öğrenci no, GitHub hesabı; repoya collaborator olarak eklenmesi | Üye A | 26 Eki |
 | 3 | Jetty/Lyrical'da eklenti adları, `gz_frame_id`, camera_info topic'i, teleop `Twist` tipi doğrulaması | S0 | F1 |
 | 4 | Commit'lerdeki Claude "Co-Authored-By" satırının ders yapay zekâ politikasına uygunluğu | Üye A | F1 |
 | 5 | Repo lisansı | Üye A | F0 |
-| 6 | `.glb` (yedek `.obj`) mesh'lerin RViz2 + Gazebo Jetty'de yön/renk testi (ADR-015) | S1 + Üye B | F1 |
+| 6 | ~~Mesh yön/renk testi~~ — tamam, `.obj` + `.mtl` (ADR-015) | — | ✅ |
+| 7 | Odometri ofseti: aks `base_link`'in 0.12 m gerisinde → yerinde dönüşte `/odom` sapıyor (VM'de ölçüldü). Öneri: `base_link`'i aks merkezine taşımak (görünüm değişmez, §4 montaj sayıları kayar). Karar bekliyor | Üye A | Sensörlerden önce |
