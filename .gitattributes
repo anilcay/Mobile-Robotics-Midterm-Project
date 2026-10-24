@@ -1,0 +1,9 @@
+# Files are edited on Windows but run on Linux: always use LF line endings.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.pdf binary
+*.stl binary
+*.blend binary
+*.glb binary
