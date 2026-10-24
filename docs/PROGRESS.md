@@ -23,7 +23,7 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | Modül | Sorumlu | Durum | Not |
 |---|---|---|---|
 | S0 Yönetici / docs | Üye A | Devam | Docs v0.1 hazır |
-| S1 Robot modeli | Üye A | Başlamadı | |
+| S1 Robot modeli | Üye A | Devam (Windows kısmı tamam) | Primitif URDF + konsept B (Saksı) Blender modeli hazır; CI yeşil. Bekleyen: Üye B VM'inde doğrulama adımları 1–5 (`docs/modules/description.md`), ardından mesh'lerin URDF'e bağlanması |
 | S2 Simülasyon | Üye A | Başlamadı | |
 | S3a LiDAR | Üye A | Başlamadı | |
 | S3b Kamera | Üye B | Başlamadı | Üye B: Ubuntu VM |
@@ -37,6 +37,7 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 - 2026-10-24 — 5 paketin iskeleti, ana xacro + placeholder makrolar, RViz config (`serabot.rviz`), GitHub Actions CI eklendi. Statik kontroller (xacro, flake8, XML/YAML) Windows'ta geçti; RViz config Linux'ta doğrulanmadı.
 - 2026-10-24 — CI yeşil (`2c66c08`): build, xacro + check_urdf, colcon test.
 - 2026-10-24 — Mesh formatı `.glb` (yedek `.obj`) olarak belirlendi (ADR-015); S1 Blender 5.2.3'e yerel köprüyle bağlandı.
+- 2026-10-24 — S1: primitif robot modeli, `display.launch.py`, konsept B (Saksı) Blender modeli (15.6k üçgen), yön/renk test küpü (`9ba0913`, `e343019`; CI yeşil). S0 incelemesi: TF ağacı, tekerlek eksenleri ve DiffDrive parametreleri sözleşmeyle uyumlu. S1 açık isteği uygulandı: `.gitignore`'a `*.blend1`.
 
 ## Açık konular / riskler
 
