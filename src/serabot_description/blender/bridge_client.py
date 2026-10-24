@@ -8,6 +8,7 @@ Exit code is 1 if the code raised inside Blender.
 
 import argparse
 import json
+import os
 import socket
 import sys
 
@@ -38,8 +39,10 @@ def main() -> int:
     if args.code is not None:
         code = args.code
     else:
-        with open(args.script, encoding='utf-8') as f:
-            code = f.read()
+        path = os.path.abspath(args.script)
+        with open(path, encoding='utf-8') as f:
+            # Scripts locate repo files relative to their own path.
+            code = f'__file__ = {path!r}\n' + f.read()
     reply = send(code)
     sys.stdout.write(reply['output'])
     if reply['result'] is not None:

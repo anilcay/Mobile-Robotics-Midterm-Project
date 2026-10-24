@@ -20,7 +20,7 @@ def generate_launch_description() -> LaunchDescription:
 
     robot_description = ParameterValue(
         Command([
-            'xacro ', PathJoinSubstitution([pkg_share, 'urdf', 'serabot.urdf.xacro']),
+            'xacro ', PathJoinSubstitution([pkg_share, 'urdf', LaunchConfiguration('model')]),
             ' use_lidar:=', LaunchConfiguration('use_lidar'),
             ' use_camera:=', LaunchConfiguration('use_camera'),
             ' use_imu:=', LaunchConfiguration('use_imu'),
@@ -29,6 +29,9 @@ def generate_launch_description() -> LaunchDescription:
     )
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'model', default_value='serabot.urdf.xacro',
+            description='Xacro file under urdf/, e.g. test/mesh_test.urdf.xacro'),
         DeclareLaunchArgument(
             'use_sim_time', default_value='false',
             description='Use /clock time (only when a simulator is running)'),
