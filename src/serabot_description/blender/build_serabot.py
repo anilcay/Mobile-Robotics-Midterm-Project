@@ -5,7 +5,9 @@ Creates one object per link in the "serabot_links" collection with its origin at
 the URDF link frame (docs/INTERFACES.md section 4.1; the chassis mesh stays around
 its own centre, offset by chassis_x in the URDF), places linked copies at their
 link poses in "serabot_assembly" for previews, saves meshes/source/serabot.blend
-and exports meshes/<link>.obj + .mtl. Dimensions follow urdf/properties.xacro.
+and exports meshes/<link>.obj + .mtl with sRGB colours (RViz2) and the same OBJ with
+linear colours in meshes/gazebo/ (Gazebo Jetty, xacro arg gazebo_mesh_colors).
+Dimensions follow urdf/properties.xacro.
 """
 
 import importlib
@@ -250,7 +252,8 @@ def main() -> dict:
         objects[link.name] = link.to_object(links)
 
     # Same OBJ settings as the orientation test (raw Blender axes, ADR-015).
-    exported = [mk.export_obj(obj, os.path.join(MESHES, f'{name}.obj'))
+    exported = [mk.export_obj(obj, os.path.join(MESHES, f'{name}.obj'),
+                              linear_dir=os.path.join(MESHES, 'gazebo'))
                 for name, obj in objects.items()]
     # Link originals stay at the origin (exported as-is) and hidden in previews.
     links.hide_render = True

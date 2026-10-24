@@ -7,6 +7,7 @@ Each link is one mesh object whose origin is the URDF link frame
 
 import math
 import os
+import shutil
 from typing import Iterable, List, Optional, Sequence, Tuple
 
 import bmesh
@@ -194,15 +195,46 @@ def _select_only(obj: bpy.types.Object) -> None:
     bpy.context.view_layer.objects.active = obj
 
 
-def export_obj(obj: bpy.types.Object, path: str) -> str:
+def linear_to_srgb(c: float) -> float:
+    """Inverse of srgb(): Blender's linear channel value to a display value."""
+    c = min(max(c, 0.0), 1.0)
+    return c * 12.92 if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055
+
+
+def _mtl_diffuse_to_srgb(mtl_path: str) -> None:
+    """Rewrite Kd lines as display (sRGB) values.
+
+    Blender writes its linear colour values. RViz2 uses Kd as a display colour (the
+    meshes looked much darker than in Blender), Gazebo Jetty as a linear one.
+    """
+    with open(mtl_path, encoding='utf-8') as f:
+        lines = f.readlines()
+    out = []
+    for line in lines:
+        if line.startswith('Kd '):
+            rgb = [linear_to_srgb(float(v)) for v in line.split()[1:4]]
+            line = 'Kd {:.6f} {:.6f} {:.6f}\n'.format(*rgb)
+        out.append(line)
+    with open(mtl_path, 'w', encoding='utf-8', newline='\n') as f:
+        f.writelines(out)
+
+
+def export_obj(obj: bpy.types.Object, path: str, linear_dir: Optional[str] = None) -> str:
     """OBJ + MTL with Blender axes kept as-is (Z up, Y forward = identity).
 
-    The project mesh format (ADR-015): loads with the right axes and colours in both
-    RViz2 and Gazebo Jetty.
+    The project mesh format (ADR-015): loads with the right axes in both RViz2 and
+    Gazebo Jetty. The MTL at path gets sRGB diffuse colours (RViz2). If linear_dir is
+    given, the same OBJ with Blender's linear MTL colours is copied there (Gazebo).
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     _select_only(obj)
     bpy.ops.wm.obj_export(filepath=path, export_selected_objects=True, forward_axis='Y',
                           up_axis='Z', export_materials=True, apply_modifiers=True,
                           export_triangulated_mesh=True, path_mode='STRIP')
+    mtl = os.path.splitext(path)[0] + '.mtl'
+    if linear_dir is not None:
+        os.makedirs(linear_dir, exist_ok=True)
+        for src in (path, mtl):
+            shutil.copyfile(src, os.path.join(linear_dir, os.path.basename(src)))
+    _mtl_diffuse_to_srgb(mtl)
     return path
