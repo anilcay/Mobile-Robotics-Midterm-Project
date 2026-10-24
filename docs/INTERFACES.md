@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.3 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8)
+**Sürüm:** 0.4 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015)
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -104,12 +104,14 @@ Başlangıç değerleri — S1 `properties.xacro`'da bunları kullanır. Diğer 
 | Kural | Değer |
 |---|---|
 | Birim / ölçek | Metre; Blender'da Unit Scale 1.0, nesnelerde ölçek uygulanmış (Apply Scale) |
-| Eksenler | REP-103: X ileri, Y sol, Z yukarı (dışa aktarımda "Z up, X forward") |
+| Eksenler | REP-103: Blender sahnesinde X ileri, Y sol, Z yukarı modellenir. Dışa aktarılan dosyanın RViz2/Gazebo'da doğru yönde açıldığı yön testiyle doğrulanır (aşağıda) |
 | Orijin | Her mesh'in orijini, bağlı olduğu link frame'inin orijininde (örn. tekerlek mesh'i aks merkezinde) |
 | Parçalama | Her link için ayrı mesh dosyası: `chassis`, `wheel` (sol/sağ aynı mesh), `caster`, `camera_mast`, `lidar`, `camera`, `imu` |
 | Dosya yolu | `src/serabot_description/meshes/<link>.<ext>`; kaynak `src/serabot_description/meshes/source/serabot.blend` |
 | URDF referansı | `package://serabot_description/meshes/<link>.<ext>` |
-| Format | Aday: `.dae` (renk/malzeme taşır). Blender sürümü desteklemiyorsa `.glb` veya `.obj`. RViz2 + Gazebo Jetty uyumu ⚠ doğrulanacak |
+| Format | **`.glb`** (glTF binary; renk/malzeme gömülü, doku kullanılacaksa gömülü). Yedek: `.obj` + `.mtl` (aynı klasörde, aynı ad). Blender 5.2'de `.dae` yok (ADR-015). RViz2 + Gazebo Jetty'de renkli yükleme ⚠ doğrulanacak (Üye B VM) |
+| glTF dışa aktarım | Format: glTF Binary; Apply Modifiers açık; sadece seçili nesne (link başına bir dosya); malzemeler Principled BSDF. `+Y Up` seçeneği varsayılan (açık) bırakılır; yön testi aksini gösterirse kapatılır veya URDF `visual` `origin` rpy ile düzeltilir — karar buraya yazılır |
+| Yön ve renk testi | İlk mesh'ten önce: +X yönünü gösteren kırmızı ok ve +Z'de mavi tepe işareti olan bir test küpü `.glb` ve `.obj` olarak dışa aktarılır; Üye B'nin VM'inde RViz2 ve Gazebo'da açılıp yön ve renkler kontrol edilir (⚠ doğrulanacak) |
 | Poligon bütçesi | Robot toplamı ≤ 50k üçgen (VM'de akıcı simülasyon için) |
 | Çarpışma | Mesh kullanılmaz; §4'teki boyutlarla primitif geometri |
 | Dış ölçüler | Mesh'in sınır kutusu §4'teki boyutlara uyar (görsel ile çarpışma modeli örtüşmeli) |

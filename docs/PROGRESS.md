@@ -35,6 +35,8 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 - 2026-10-24 — Proje dökümanı analiz edildi, senaryo (SeraBot), mimari, sensör seti ve plan belirlendi.
 - 2026-10-24 — `CLAUDE.md`, `docs/` (REQUIREMENTS, ARCHITECTURE, INTERFACES, DECISIONS, PROGRESS, modül dosyaları) oluşturuldu.
 - 2026-10-24 — 5 paketin iskeleti, ana xacro + placeholder makrolar, RViz config (`serabot.rviz`), GitHub Actions CI eklendi. Statik kontroller (xacro, flake8, XML/YAML) Windows'ta geçti; RViz config Linux'ta doğrulanmadı.
+- 2026-10-24 — CI yeşil (`2c66c08`): build, xacro + check_urdf, colcon test.
+- 2026-10-24 — Mesh formatı `.glb` (yedek `.obj`) olarak belirlendi (ADR-015); S1 Blender 5.2.3'e yerel köprüyle bağlandı.
 
 ## Açık konular / riskler
 
@@ -45,4 +47,4 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | 3 | Jetty/Lyrical'da eklenti adları, `gz_frame_id`, camera_info topic'i, teleop `Twist` tipi doğrulaması | S0 | F1 |
 | 4 | Commit'lerdeki Claude "Co-Authored-By" satırının ders yapay zekâ politikasına uygunluğu | Üye A | F1 |
 | 5 | Repo lisansı | Üye A | F0 |
-| 6 | Blender mesh formatının (DAE/glTF/OBJ) RViz2 + Gazebo Jetty uyumu | S1 + Üye B | F1 |
+| 6 | `.glb` (yedek `.obj`) mesh'lerin RViz2 + Gazebo Jetty'de yön/renk testi (ADR-015) | S1 + Üye B | F1 |
