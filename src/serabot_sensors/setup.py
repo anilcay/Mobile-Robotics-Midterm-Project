@@ -16,7 +16,7 @@ setup(
     maintainer_email='ahmetanilcay@ogr.iuc.edu.tr',
     description='Sensor helper nodes for SeraBot (camera color detector, IMU monitor).',
     license='Apache-2.0',
-    tests_require=['pytest'],
+    extras_require={'test': ['pytest']},
     # Entry points are registered up front so module owners never edit this
     # file at the same time. Each module must provide a main() function.
     entry_points={

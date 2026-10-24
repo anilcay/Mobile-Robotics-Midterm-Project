@@ -16,7 +16,7 @@ setup(
     maintainer_email='ahmetanilcay@ogr.iuc.edu.tr',
     description='Sensor-based behavior node for SeraBot (obstacle avoidance, target tracking).',
     license='Apache-2.0',
-    tests_require=['pytest'],
+    extras_require={'test': ['pytest']},
     entry_points={
         'console_scripts': [
             'behavior_node = serabot_behavior.behavior_node:main',
