@@ -1,133 +1,106 @@
 # Modül S1 — Robot Modeli (`serabot_description`)
 
-- **Sorumlu:** Üye A · **Faz:** F1 (26–28 Eki) · **Durum:** Primitif model tamam (CI'da `check_urdf` geçti; Gazebo'da doğrulanmadı) · Konsept B (Saksı) Blender'da modellendi · Mesh yön/renk testi Üye B'yi bekliyor
+- **Sorumlu:** Üye A · **Faz:** F1 (26–28 Eki) · **Durum:** Model tamam — ADR-017 uygulandı, konsept B `.obj` mesh'leri URDF'e bağlandı; VM'de build, `check_urdf` ve yerinde dönüş testi geçti · Tekerlek çarpışması küre (odometri yaw sapması giderildi) · RViz ekran görüntüsü VM ekran kilidi nedeniyle bekliyor
 - **Sahip olunan yollar:** `src/serabot_description/` — ana `urdf/serabot.urdf.xacro` (S0) ve `urdf/sensors/` (sensör sahipleri) hariç
-- **Bağımlı olduğu:** `INTERFACES.md` §3 (frame'ler), §4 (boyutlar), §5 (eklentiler)
-- **Ona bağımlı olanlar:** S2 (spawn), S3a/b/c (montaj linkleri), S4 (tekerlek geometrisi)
+- **Bağımlı olduğu:** `INTERFACES.md` §3 (frame'ler), §4 (boyutlar), §4.1 (mesh), §5 (eklentiler)
+- **Ona bağımlı olanlar:** S2 (spawn), S3a/b/c (montaj linkleri, sensör mesh'leri), S4 (tekerlek geometrisi)
 
 ## Çalışma yöntemi
 
-Görsel model **Blender'da** hazırlanır; çarpışma modeli primitif kalır (ADR-012). Mesh kuralları: `INTERFACES.md` §4.1. Önce primitif görselli çalışan URDF yapılır, mesh'ler hazır oldukça `visual` blokları mesh'e çevrilir — böylece S2 ve sensör modülleri mesh'leri beklemez.
+Görsel model **Blender'da** hazırlanır; çarpışma modeli primitif kalır (ADR-012). Mesh kuralları: `INTERFACES.md` §4.1. Model betikle üretilir (`blender/build_serabot.py`), elle düzenlenmez; değişiklik betikte yapılıp yeniden çalıştırılır.
 
 ## Görevler
 
-- [x] `urdf/properties.xacro` — tüm boyut/kütle sabitleri (`INTERFACES.md` §4)
+- [x] `urdf/properties.xacro` — tüm boyut/kütle sabitleri (`INTERFACES.md` §4, v0.6)
 - [x] `urdf/inertial_macros.xacro` — kutu, silindir, küre inertia makroları
-- [x] `urdf/chassis.xacro` — `base_footprint`, `base_link`, şasi görseli (sera yeşili gövde, kiremit rengi ön tampon şeridi)
-- [x] `urdf/wheels.xacro` — sol/sağ tekerlek makrosu (`continuous`), caster (sürtünmesiz küre)
-- [x] `urdf/camera_mast.xacro` — `camera_mast_link` (direk); kamera sensörü değil, sadece montaj noktası
-- [x] `urdf/gazebo_drive.xacro` — DiffDrive + JointStatePublisher eklentileri, tekerlek sürtünme (`mu1/mu2`) ayarları
-- [x] `urdf/materials.xacro` — renkler (RViz + Gazebo)
-- [x] `launch/display.launch.py` — robot_state_publisher + joint_state_publisher_gui + RViz (`rviz/model.rviz`)
-- [x] Ana xacro'ya eklenmesi gereken include'ları "Açık istekler"e yaz — gerek yok: her S1 dosyası yardımcıları kendisi include ediyor, ana xacro değişmedi
-- [x] Blender tasarımı: konsept B (Saksı) seçildi ve modellendi, `meshes/source/serabot.blend`
-- [x] Yön/renk test küpü (ADR-015): `meshes/test/`, `urdf/test/mesh_test.urdf.xacro`
-- [ ] Test küpü sonucu (Üye B VM) → dışa aktarım ayarını seç, link başına mesh dışa aktarımı
-- [ ] Mesh formatının RViz2 ve Gazebo'da renkleriyle yüklendiğini doğrula (Üye B'nin VM'i), `visual` bloklarını mesh'e çevir
-- [ ] Rapor için tasarım görselleri (Blender render, ön/yan/üst görünüş)
+- [x] `urdf/chassis.xacro` — `base_footprint`, `base_link`, şasi
+- [x] `urdf/wheels.xacro` — sol/sağ tekerlek (`continuous`), caster (sürtünmesiz küre)
+- [x] `urdf/camera_mast.xacro` — `camera_mast_link` (direk, montaj noktası)
+- [x] `urdf/gazebo_drive.xacro` — DiffDrive + JointStatePublisher, tekerlek/caster sürtünmesi
+- [x] `urdf/materials.xacro` — renkler (primitif yedek görseller ve sensör dosyaları için)
+- [x] `launch/display.launch.py` + `rviz/model.rviz`
+- [x] Blender tasarımı: konsept B (Saksı), `meshes/source/serabot.blend`
+- [x] Yön/renk test küpü (ADR-015) → format `.obj` + `.mtl`
+- [x] ADR-017: `base_link` aks ortasına
+- [x] Link mesh'lerinin `.obj` + `.mtl` dışa aktarımı, `visual` bloklarının mesh'e çevrilmesi (primitif yedek bayrağıyla)
+- [x] Rapor görselleri: `docs/report/serabot_{persp_front,persp_back,front,side,top}.png`
+- [ ] RViz'de mesh'li modelin ekran görüntüsü (VM ekran kilidi açılınca)
+- [x] Tekerlek çarpışması küre r = 0.08 (kullanıcı kararı; odometri yaw sapması %10.7 → %0.1)
 
 ## Tamamlanma kriteri
 
-- `xacro serabot.urdf.xacro` hatasız URDF üretiyor (Windows'ta statik kontrol). ✅
-- `check_urdf` hatasız; TF ağacı `ARCHITECTURE.md` §4 ile birebir (Linux). ⏳
-- Gazebo'da robot yere düzgün oturuyor, devrilmiyor; `/cmd_vel` ile ileri gidip dönüyor (S2 ile birlikte, Linux). ⏳
+- `xacro serabot.urdf.xacro` hatasız URDF üretiyor. ✅ (Windows + CI + VM)
+- `check_urdf` hatasız; TF ağacı `ARCHITECTURE.md` §4 ile birebir. ✅ (VM, 2026-10-24)
+- Gazebo'da robot yere düzgün oturuyor, devrilmiyor; `/cmd_vel` ile ileri gidip dönüyor. ✅ (VM, S0, primitif model) · Yerinde dönüşte gövde yerinde kalıyor ✅ (VM, mesh'li model)
 
 ## Yapılanlar
 
-- **Blender bağlantısı (2026-10-24):** Blender MCP yerine harici indirme gerektirmeyen yerel köprü yazıldı: `blender/bridge_server.py` (Blender içinde, sadece `127.0.0.1:9877`), `blender/bridge_client.py` (Windows Python'dan kod gönderir). Ortam: Blender 5.2.3 LTS (Steam), EEVEE, GTX 1650; Unit Scale 1.0. Köprü üzerinden sahne sorgusu ve EEVEE render testi geçti.
+- **Blender bağlantısı (2026-10-24):** Blender MCP yerine harici indirme gerektirmeyen yerel köprü: `blender/bridge_server.py` (Blender içinde, sadece `127.0.0.1:9877`), `blender/bridge_client.py` (Windows Python'dan kod gönderir; betik dosyasına `__file__` iletir). Ortam: Blender 5.2.3 LTS (Steam), EEVEE, GTX 1650; Unit Scale 1.0.
   - Başlatma: `"C:\Program Files (x86)\Steam\steamapps\common\Blender\blender.exe" --python src/serabot_description/blender/bridge_server.py`
   - Kullanım: `python src/serabot_description/blender/bridge_client.py <script.py>` veya `-c "<kod>"`; kod `result` değişkeniyle JSON değer döndürebilir.
   - `blender/` klasörü CMake ile kurulmaz (sadece geliştirme aracı).
-- **Primitif model (2026-10-24):**
-  - `properties.xacro`: §4 değerleri + türetilmiş değerler. Sözleşme dışı seçimler: tekerlek 0.5 kg, caster 0.1 kg, direk 0.3 kg (r = 0.015 m), tekerlek `mu` = 1.0, caster `mu` = 0, DiffDrive ivme sınırları 1.0 m/s² / 3.0 rad/s². Toplam kütle 7.4 kg, ağırlık merkezi x = −0.02 m (aks ile caster arasında).
-  - Sensör montaj noktaları da property olarak var: `lidar_x/y/z`, `imu_x/y/z`, `camera_z` — sensör xacro'ları `../properties.xacro` include edip bunları kullanabilir.
-  - Geometri: şasi `base_link`'e göre z = −0.06…+0.06 (zeminden 2 cm yukarıda), direk tabanı şasi üst yüzeyinde (zeminden 0.14 m), kamera yüksekliği 0.44 m, caster zemine değiyor, tekerlek iç yüzü ile şasi arası 1 cm.
-  - `materials.xacro`: renkler `serabot_material` makrosuyla `<visual>` içine **satır içi** yazılır (üst seviye `<material>` yok) → dosya birden çok yerden include edilse de "material is not unique" hatası olmaz. Kullanım: `<xacro:serabot_material name="dark"/>` (green, leaf, terracotta, dark, grey, rubber, red).
-  - `display.launch.py`: argümanlar `use_sim_time` (varsayılan **false** — Gazebo'suz `/clock` yok), `rviz`, `use_lidar`, `use_camera`, `use_imu`.
-  - `launch/` ve `rviz/` içindeki `.gitkeep` dosyaları silindi (klasörler artık dolu).
-  - Commit `9ba0913`, push edildi.
-- **Tasarım konseptleri (2026-10-24, kullanıcı B'yi seçti):** Üçü de §4 sınır kutusunda, sensör/direk konumları aynı.
-  - **A — Cam sera:** alt gövde sera yeşili, üst yarı buzlu cam panelli + beyaz alüminyum çerçeve, sırt çizgisi; beyaz direk ve kamera kutusu; LiDAR beyaz "havalandırma bacası" içinde; kiremit rengi ön tampon.
-  - **B — Saksı:** pişmiş toprak renginde, aşağı doğru daralan saksı gövdesi + koyu kenar bandı; üst yüzey toprak dokusu; direk yeşil "bitki sapı" + yaprak braketi, kamera tomurcuk biçimli kapsül; LiDAR çakıl taşı kubbesi.
-  - **C — Tarla aracı:** grafit gövde + yaprak yeşili üst panel, pahlı ön yüz, sarı-siyah ikaz şeridi; tırtıklı lastikler; direk payandalı, anten + kırmızı LED; LiDAR siyah puck + yeşil halka.
-- **CI (2026-10-24):** `9ba0913` için GitHub Actions yeşil — `colcon build`, `xacro` + `check_urdf`, `colcon test` Linux konteynerinde geçti.
-- **Yön/renk test küpü (2026-10-24, ADR-015):** `blender/make_orientation_test.py` ile 0.2 m gri küp + kırmızı ok (+X), yeşil ok (+Y), mavi kapak (+Z). Üç dosya: `meshes/test/orientation_cube_yup.glb` (glTF varsayılan "+Y Up" dönüşümü), `orientation_cube_zup.glb` (dönüşümsüz, ham Blender eksenleri), `orientation_cube.obj` + `.mtl` (Z yukarı, Y ileri = ham eksenler). Dosya içi kontrol (Windows): dört malzeme ayrı ayrı, `doubleSided: false`; `yup` dosyasında Blender +Z → glTF +Y, +Y → −Z. `urdf/test/mesh_test.urdf.xacro` üç mesh'i primitif referansla yan yana gösterir. `display.launch.py`'ye `model` argümanı eklendi (varsayılan `serabot.urdf.xacro`).
-- **Konsept B modeli (2026-10-24):** `blender/build_serabot.py` (prosedürel, tekrar üretilebilir; yardımcılar `blender/mesh_kit.py`, render `blender/render_serabot.py`).
-  - Link mesh'leri (orijin = link frame): `chassis` (daralan saksı + kenar bandı + toprak + krem tabak/tampon + yan yaprak motifleri + arka bitki etiketi + çakıllar), `wheel` (simetrik — sol/sağ aynı mesh; tırtıklı lastik, krem jant, yaprak "çiçek" deseni), `caster` (metal bilye + krem yuva), `camera_mast` (boğumlu yeşil sap, toprakta filiz, iki yaprak), `camera` (tomurcuk; mercek +X), `lidar` (çakıl taşı, z = 0 tarama düzleminde koyu pencere bandı), `imu` (şasi içinde küçük kart).
-  - Sınır kutuları: şasi tam 0.45 × 0.30 × 0.12; tekerlek r 0.08 × 0.04; caster r 0.03 (+ yuva). Üçgen sayısı: robot toplamı 15.6k (bütçe 50k).
-  - LiDAR uyumu: sap yaprakları tarama düzleminin (direk tabanından +0.04 m) üstünde, toprak filizleri altında; sapın kendisi LiDAR'a ≈ 0.235 m, `range_min` 0.25 altında kalıyor.
-  - Tüm malzemeler tek taraflı (backface culling açık → glTF `doubleSided: false`); amaç LiDAR/kameranın kendi gövdesinin iç yüzünü görmemesi.
-  - Ara render'lar (perspektif ön/arka, ön, yan, üst) alındı. URDF `visual` blokları henüz primitif; mesh'e çevirme test küpü sonucundan sonra.
+- **Primitif model (2026-10-24, `9ba0913`):** `properties.xacro` (§4 değerleri + türetilmiş değerler), inertia/materyal yardımcıları, gövde makroları, `display.launch.py`. Sözleşme dışı seçimler: tekerlek 0.5 kg, caster 0.1 kg, direk 0.3 kg (r = 0.015 m), tekerlek `mu` = 1.0, caster `mu` = 0, DiffDrive ivme sınırları 1.0 m/s² / 3.0 rad/s². `materials.xacro` renkleri `serabot_material` makrosuyla `<visual>` içine satır içi yazar (birden çok include'da "material is not unique" olmaz). Sensör montaj noktaları property: `lidar_x/y/z`, `imu_x/y/z`, `camera_z`.
+- **Tasarım konseptleri (2026-10-24):** A — Cam sera, **B — Saksı (seçildi)**, C — Tarla aracı.
+- **Yön/renk test küpü (2026-10-24, `e343019`):** `blender/make_orientation_test.py`, `urdf/test/mesh_test.urdf.xacro`. S0'ın VM testi sonucu `.obj` + `.mtl` seçildi (ADR-015). `.glb` dosyaları ve test URDF'indeki glb nesneleri kaldırıldı (kullanıcı onayı); test artık primitif referans + `.obj`.
+- **Konsept B modeli (2026-10-24):** `blender/build_serabot.py` (prosedürel), yardımcılar `blender/mesh_kit.py`, render `blender/render_serabot.py`.
+  - Link mesh'leri: `chassis` (daralan saksı + kenar bandı + toprak + krem tabak/tampon + yan yaprak motifleri + arka bitki etiketi + çakıllar), `wheel` (simetrik — sol/sağ aynı mesh), `caster`, `camera_mast` (boğumlu sap, filiz, iki yaprak), `camera` (tomurcuk; mercek +X), `lidar` (çakıl taşı, z = 0 tarama düzleminde koyu pencere bandı), `imu`.
+  - Üçgen: robot toplamı 15.6k (bütçe 50k). Sınır kutuları: şasi tam 0.45 × 0.30 × 0.12; tekerlek r 0.08 × 0.04; caster r 0.03.
+  - LiDAR uyumu: sap yaprakları tarama düzleminin üstünde, filizler altında; sap yüzeyi LiDAR'a 0.235 m (`range_min` 0.25 altında).
+- **ADR-017 uygulaması (2026-10-24):** `base_link` = aks ortası.
+  - `properties.xacro`: `wheel_x` 0, yeni `chassis_x` +0.12, `caster_x` +0.29, `mast_x` −0.03, `lidar_x` +0.22, `imu_x` 0.
+  - Şasi `visual`/`collision`/`inertial` origin'i `chassis_x`; şasi mesh'i kendi merkezinde (§4.1 istisnası). Diğer mesh'ler kendi link frame'inde.
+  - **Kütle:** toplam 7.4 kg, ağırlık merkezi `base_footprint`'e göre (+0.100, 0, 0.088) m → aks (0) ile caster (+0.29) arasında; statik yük tekerleklerde %66, caster'da %34.
+  - Blender önizleme konumları ve render kamerası yeni frame'lere göre güncellendi.
+- **Mesh'ler URDF'te (2026-10-24):** `meshes/{chassis,wheel,caster,camera_mast,lidar,camera,imu}.obj` + `.mtl` (test küpü ayarları: ham Blender eksenleri, üçgenlenmiş, sadece seçili nesne). Şasi, tekerlekler, caster ve direk `visual`'ı mesh; `<material>` etiketi yok (renkler MTL'den). Çarpışmalar primitif.
+  - **Primitif yedek:** `properties.xacro` → `use_mesh_visuals` (varsayılan `true`). `false` yapılırsa eski primitif görseller kullanılır (örn. VM'de yazılımsal render yavaşsa).
+  - `lidar`, `camera`, `imu` mesh'leri hazır; sensör xacro'larına bağlanmaları sensör sahiplerinin işi (aşağıda "Açık istekler").
+- **Tekerlek çarpışması küre (2026-10-24, kullanıcı kararı):** `wheels.xacro` — tekerlek `collision`'ı silindir yerine küre r = `wheel_radius` (0.08), aks merkezinde. Silindir zemine iç kenarından temas ediyor, etkin tekerlek aralığını ≈ 0.325 m'ye düşürüyordu (DiffDrive 0.36 varsayıyor) → `/odom` yerinde dönüşü %10.7 eksik bildiriyordu. Görsel mesh ve inertia (silindir) değişmedi. Yan etki: tekerlek çarpışma zarfı merkezden ±0.08 m (silindirde ±0.02) → robotun çarpışma genişliği 0.40 → 0.52 m; küre içte şasi kutusuyla örtüşür (aynı model, öz-çarpışma kapalı — etkisi yok).
+- **Rapor görselleri (2026-10-24):** `docs/report/serabot_{persp_front,persp_back,front,side,top}.png` (1600 × 1066, EEVEE; kullanıcı onayıyla `docs/` altına). Yeniden üretmek için: `bridge_client.py -c "RENDER_DIR=r'<repo>\docs\report'; RES=(1600, 1066)"` ve ardından `bridge_client.py render_serabot.py`.
 
 ## Doğrulama
 
-**Windows (yapıldı, geçti):**
-- `xacro serabot.urdf.xacro` → hatasız, uyarısız URDF.
-- Statik kontrol betiği (`check_urdf` benzeri, Python): §3 joint/parent/child/tipleri, §4 konumları (base_link 0.08, tekerlekler (−0.12, ±0.18, 0.08), caster altı z = 0, direk tabanı 0.14, kamera 0.44), her link'te visual+collision, inertia pozitif + üçgen eşitsizliği, DiffDrive/JointStatePublisher parametreleri §5 ile birebir, yinelenen material yok → **tümü geçti**.
-- Bir sensör dosyası `../properties.xacro`, `../materials.xacro`, `../inertial_macros.xacro` include ettiğinde (kopya klasörde denendi) uyarısız çalışıyor.
-- `py_compile` + `flake8 --max-line-length 99 src/` → temiz. `model.rviz` geçerli YAML.
-- Blender'da URDF primitifleri kurulup render alındı; görünüm ölçülerle tutarlı.
+**Windows (2026-10-24, ADR-017 + mesh sonrası):**
+- `xacro` → hatasız URDF (mesh varyantı ve `use_mesh_visuals=false` yedek varyantı).
+- Statik kontrol betiği (Python), iki varyantta da **tümü geçti**: §3 joint'leri; §4 v0.6 konumları (base_link (0, 0, 0.08), tekerlekler (0, ±0.18, 0.08), `base_footprint` = aks ortasının izdüşümü, caster (0.29, 0, 0.03) zemine değiyor, direk tabanı (−0.03, 0, 0.14), kamera 0.44 m); şasi kutusu x −0.105 … +0.345, inertia ve mesh origin'i kutu merkezinde; LiDAR montaj property'leri; her link'te visual + primitif collision; mesh URI'leri `package://serabot_description/meshes/*.obj` ve `.obj` + `.mtl` dosyaları mevcut, mesh visual'larında `<material>` yok; inertia geçerli; ağırlık merkezi aks–caster arasında; DiffDrive/JointStatePublisher §5 ile birebir.
+- `.obj` dosyaları bağımsız okundu: sınır kutuları yukarıdaki gibi, kullanılan her malzeme `.mtl`'de tanımlı.
+- `flake8 --max-line-length 99 src/` → temiz.
 
-**Linux — Üye B'nin VM'inde çalıştırılacak (Linux'ta doğrulanmadı):**
+**Linux — S0, Üye A VM'i (Docker, Lyrical + Gazebo Jetty 10.5.0), primitif model, ADR-017 öncesi (ayrıntı `PROGRESS.md`):**
+1. `check_urdf` ✅
+2. RViz model görüntüsü ✅
+3. SDF + sürtünme: caster `mu` = 0, tekerlek `mu` = 1 ✅ — sabit joint birleştirmesinden sonra da uygulanıyor
+4. Gazebo spawn, ileri sürüş ve dönüş; `/odom`, `/tf`, `/joint_states` ✅ — JointStatePublisher `<topic>` parametresi Jetty'de çalışıyor. Yerinde dönüşte gövde ~0.12 m yarıçaplı yay çiziyordu → ADR-017.
+5. Mesh yön/renk testi ✅ — `.obj` RViz2 ve Gazebo'da doğru; `glb_yup` sadece RViz2'de, `glb_zup` sadece Gazebo'da doğru → `.obj` + `.mtl` (ADR-015).
 
-Repo kökü workspace köküdür (`src/` doğrudan altında); komutlar repo kökünden:
+**Linux — S1, aynı VM (2026-10-24), ADR-017 + mesh'li model:**
+- `scripts/sync_to_vm.sh` → `colcon build --packages-select serabot_description` ✅; `check_urdf` ✅ (`base_footprint` → `base_link` → `camera_mast_link`, `caster_link`, `left/right_wheel_link`); 7 `.obj` + `.mtl` kurulu `share/` altında; `GZ_SIM_RESOURCE_PATH` `install/serabot_description/share` içeriyor.
+- **Yerinde dönüş (GUI'siz Gazebo, `empty.sdf`, 0.8 rad/s, ~12 s)** — gerçek konum/yaw `/world/empty/pose/info`'dan, odometri `/odom`'dan; yaw robot durduktan sonra karşılaştırıldı:
+
+  | Tekerlek çarpışması | Koşu | Dönüş | `base_footprint` kayması | `/odom` konum hatası | `/odom` yaw hatası |
+  |---|---|---|---|---|---|
+  | Silindir (önceki) | 1 / 2 | 471° / 502° | 1.6 / 1.6 mm | 1.6 / 1.6 mm | +50° / +54° (**+10.7%**) |
+  | **Küre r = 0.08 (güncel)** | 1 / 2 | 370° / 397° | **0.3 / 0.7 mm** | **~0 / ~0 mm** | +0.5° / +0.4° (**+0.1%**) |
+
+  Ölçüt (konum kayması ve `/odom` konum hatası < 0.02 m) iki durumda da ✅; ADR-017 öncesi ~0.12 m yay çiziyordu. Silindirde gövde odometrinin bildirdiğinden %10.7 fazla dönüyordu (etkin tekerlek aralığı ≈ 0.325 m) → küre seçildi.
+- **Düz sürüş (küre, 0.25 m/s, ~6 s):** 1.32 m ileri; yanal sapma 0.0000 m, yön değişimi 0.00°, `/odom` konum hatası 4.9 mm, yaw hatası 0.00° ✅.
+  - Ölçüm betiği gerçek konumu `/world/empty/pose/info`'dan, odometriyi `/odom`'dan `gz topic` ile okur; dönerken alınan örneklerde iki okuma arasındaki ~0.4 s yüzünden yaw farkı abartılı görünür, bu yüzden yaw sadece durunca karşılaştırıldı.
+- RViz'de mesh'li model: ⏳ VM ekranı kilitli/karartılmış (GNOME ekran koruyucusu aktif); kilit açılınca alınacak.
+
+**Tekrar üretme (VM'de, repo kökünden):**
 
 ```bash
-colcon build --packages-select serabot_description && source install/setup.bash
+scripts/sync_to_vm.sh
+ssh serabot-vm 'cd serabot_ws && docker/run.sh exec "colcon build --packages-select serabot_description && xacro install/serabot_description/share/serabot_description/urdf/serabot.urdf.xacro > /tmp/serabot.urdf && check_urdf /tmp/serabot.urdf"'
 ```
 
-1. URDF ayrıştırma:
-   ```bash
-   xacro src/serabot_description/urdf/serabot.urdf.xacro > /tmp/serabot.urdf && check_urdf /tmp/serabot.urdf
-   ```
-   Beklenen: `Successfully Parsed XML`; kök `base_footprint` → `base_link` → `left_wheel_link`, `right_wheel_link`, `caster_link`, `camera_mast_link` (+ sensör linkleri dolduruldukça).
-2. RViz görüntüleme:
-   ```bash
-   ros2 launch serabot_description display.launch.py
-   ```
-   Beklenen: RViz'de yeşil gövde, siyah tekerlekler, ön tarafta turuncu şerit, arkada direk; TF eksenleri görünür. joint_state_publisher_gui kaydırıcıları tekerlekleri döndürür. Terminalde hata yok.
-3. SDF dönüşümü ve sürtünme:
-   ```bash
-   gz sdf -p /tmp/serabot.urdf > /tmp/serabot.sdf && grep -n -A3 "<mu>" /tmp/serabot.sdf
-   ```
-   Beklenen: hata yok; caster çarpışmasında `mu` 0, tekerleklerde 1.
-4. Gazebo'da sürüş (S2 bringup'ı beklemeden, ROS'suz):
-   ```bash
-   gz sim -r empty.sdf
-   ```
-   İkinci terminalde:
-   ```bash
-   gz service -s /world/empty/create --reqtype gz.msgs.EntityFactory --reptype gz.msgs.Boolean --timeout 2000 --req 'sdf_filename: "/tmp/serabot.urdf", name: "serabot"'
-   gz topic -t /cmd_vel -m gz.msgs.Twist -p 'linear: {x: 0.25}'
-   gz topic -t /cmd_vel -m gz.msgs.Twist -p 'angular: {z: 0.8}'
-   gz topic -e -t /odom -n 1
-   gz topic -l | grep joint_states
-   ```
-   Beklenen: robot yere oturur, devrilmez, sekmez; ilk komutla +x yönünde ileri gider, ikinciyle saat yönünün tersine döner; `/odom` mesajında `child_frame_id: base_footprint`; `/joint_states` topic'i listede.
+RViz (VM masaüstünde): `ros2 launch serabot_description display.launch.py` · test küpü: `model:=test/mesh_test.urdf.xacro`. Gazebo: `gz sim -r empty.sdf` + `gz service -s /world/empty/create ... sdf_filename: "/tmp/serabot.urdf"`. Konteynerde iki Gazebo sunucusu aynı anda çalışırsa (aynı dünya adı) `/odom` ve `/cmd_vel` karışır — başlatmadan önce `ps -eo stat,args | grep gz-sim-mai[n]` ile kontrol edin.
 
-5. **Mesh yön/renk testi (ADR-015) — mesh dışa aktarımı bu sonuca bağlı:**
-   ```bash
-   ros2 launch serabot_description display.launch.py model:=test/mesh_test.urdf.xacro
-   ```
-   RViz'de +Y'den −Y'ye dört nesne: `ref_primitive`, `glb_yup`, `glb_zup`, `obj` (TF etiketlerinde adları görünür). Beklenen: en az bir mesh, referans ile **aynı yönde** (kırmızı ok TF'nin kırmızı X ekseni yönünde, yeşil ok Y, mavi kapak yukarıda) ve **renkli** (gri değil/beyaz değil). Hangilerinin doğru olduğunu yazın; ekran görüntüsü ekleyin.
+## Açık istekler
 
-   Gazebo'da aynı test:
-   ```bash
-   xacro src/serabot_description/urdf/test/mesh_test.urdf.xacro > /tmp/mesh_test.urdf
-   gz sim -r empty.sdf
-   gz service -s /world/empty/create --reqtype gz.msgs.EntityFactory --reptype gz.msgs.Boolean --timeout 2000 --req 'sdf_filename: "/tmp/mesh_test.urdf", name: "mesh_test"'
-   ```
-   Beklenen: dört nesne (+Y'den −Y'ye aynı sıra) yerinde durur; mesh'ler bulunur (terminalde "Unable to find file" hatası yok — `package://` çözümü ve `GZ_SIM_RESOURCE_PATH` kancası da böylece doğrulanır); yön ve renkler referansla aynı. Hangi dosyanın RViz **ve** Gazebo'da doğru olduğunu yazın.
-
-Sonuçları (geçti/kaldı + hata çıktısı) bu bölüme yazın.
-
-## Açık istekler (S0'a)
-
-- `.gitignore`'a `*.blend1` eklenmesi (Blender'ın kayıt yedeği; `build_serabot.py` şimdilik kayıttan sonra siliyor).
+- **S0'a — `INTERFACES.md` §4.1 notu:** "Çarpışma: §4'teki boyutlarla primitif geometri" kuralına bir istisna: tekerlek çarpışması küre r = 0.08 (tekerlek genişliği 0.04 değil). Gerekçe ve ölçüm yukarıda (odometri yaw sapması). Robotun çarpışma genişliği 0.52 m — S4'ün dar geçit/engel mesafesi ayarlarında dikkate alınmalı.
+- **Sensör sahiplerine (S0 iletir):** görsel mesh'ler hazır — `package://serabot_description/meshes/lidar.obj`, `camera.obj`, `imu.obj` (orijinleri kendi link frame'inde: `lidar_link`, `camera_link`, `imu_link`; `origin` 0, `<material>` etiketi yok). Montaj property'leri `../properties.xacro`'da (`lidar_x/y/z`, `imu_x/y/z`, `camera_z`). Primitif yedek için `use_mesh_visuals` property'sine uyulabilir.
 
 ## Açık sorunlar
 
-- **Mesh formatı:** Blender 5.2'de Collada (`.dae`) dışa aktarımı yok. S0 kararı (ADR-015, `INTERFACES.md` v0.4 §4.1): `.glb`, yedek `.obj` + `.mtl`. Gerçek mesh'lerden önce yön/renk test küpü (`.glb` + `.obj`) hazırlanıp Üye B'nin VM'inde RViz2 ve Gazebo'da denenecek (Linux'ta doğrulanmadı).
-- **Odometri ofseti (kabul edildi):** Sözleşmeye göre aks `base_link`'in 0.12 m gerisinde. gz DiffDrive odometriyi aks merkezine göre hesaplayıp `base_footprint` adıyla yayınlıyor; yerinde dönüşte `/odom` konumunda küçük hata olur. Davranış harita kullanmadığı ve dönüş açısını IMU'dan aldığı için sözleşme korundu (kullanıcı kararı, 2026-10-24).
-- **⚠ Doğrulanacak (Linux) — sensör kendi gövdesini görüyor mu:** LiDAR çakılı ve kamera tomurcuğu sensör noktasını sarıyor. Mesh'ler tek taraflı dışa aktarılıyor (içeriden görünmemeli). Mesh'ler URDF'e bağlandıktan sonra Üye A `/scan`'de ~0.03–0.05 m'de sabit okuma, Üye B görüntüde yeşil/koyu kaplama olup olmadığını kontrol etmeli. Sorun olursa sensör `visual`'ında pencere boşluğu bırakılır veya `visibility_flags` kullanılır.
-- **⚠ Doğrulanacak (Linux):** JointStatePublisher'ın `<topic>/joint_states</topic>` parametresini Jetty'de desteklediği; caster'ın `mu1/mu2` değerinin sabit joint birleştirmesinden (lumping) sonra da çarpışmaya uygulandığı (Doğrulama 3. adım).
+- **⚠ Doğrulanacak (Linux) — sensör kendi gövdesini görüyor mu:** LiDAR çakılı ve kamera tomurcuğu sensör noktasını sarıyor. OBJ'de tek/çift taraf bayrağı yok; Gazebo'nun malzemeyi tek taraflı (arka yüz gizli) çizip çizmediği sensörler eklenince görülecek. Üye A `/scan`'de ~0.03–0.05 m'de sabit okuma, Üye B görüntüde yeşil/koyu kaplama olup olmadığını kontrol etmeli. Sorun olursa sensör `visual`'ında pencere boşluğu bırakılır veya `visibility_flags` kullanılır.
+- **Rapor görselleri boyutu:** 5 PNG toplam ~8 MB. Repo boyutu sorun olursa JPEG'e çevrilebilir.

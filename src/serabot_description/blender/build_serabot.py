@@ -2,9 +2,10 @@
 
 Run through the bridge:  python bridge_client.py build_serabot.py
 Creates one object per link in the "serabot_links" collection with its origin at
-the URDF link frame (docs/INTERFACES.md section 4.1), places linked copies at
-their link poses in "serabot_assembly" for previews, and saves
-meshes/source/serabot.blend. Dimensions follow urdf/properties.xacro.
+the URDF link frame (docs/INTERFACES.md section 4.1; the chassis mesh stays around
+its own centre, offset by chassis_x in the URDF), places linked copies at their
+link poses in "serabot_assembly" for previews, saves meshes/source/serabot.blend
+and exports meshes/<link>.obj + .mtl. Dimensions follow urdf/properties.xacro.
 """
 
 import importlib
@@ -20,15 +21,17 @@ import mesh_kit as mk  # noqa: E402
 importlib.reload(mk)
 
 PKG = os.path.dirname(os.path.dirname(__file__))
-BLEND = os.path.join(PKG, 'meshes', 'source', 'serabot.blend')
+MESHES = os.path.join(PKG, 'meshes')
+BLEND = os.path.join(MESHES, 'source', 'serabot.blend')
 
 # --- Contract dimensions (INTERFACES.md section 4, urdf/properties.xacro) ---
-CHASSIS_L, CHASSIS_W, CHASSIS_H = 0.45, 0.30, 0.12
-WHEEL_R, WHEEL_W, WHEEL_SEP, WHEEL_X = 0.08, 0.04, 0.36, -0.12
+# x values are from base_link = middle of the wheel axle (ADR-017).
+CHASSIS_L, CHASSIS_W, CHASSIS_H, CHASSIS_X = 0.45, 0.30, 0.12, 0.12
+WHEEL_R, WHEEL_W, WHEEL_SEP, WHEEL_X = 0.08, 0.04, 0.36, 0.0
 BASE_Z = WHEEL_R
-CASTER_R, CASTER_X = 0.03, 0.17
-MAST_X, MAST_Z, MAST_H = -0.15, CHASSIS_H / 2, 0.30
-LIDAR_X, LIDAR_Z = 0.10, 0.10
+CASTER_R, CASTER_X = 0.03, 0.29
+MAST_X, MAST_Z, MAST_H = -0.03, CHASSIS_H / 2, 0.30
+LIDAR_X, LIDAR_Z = 0.22, 0.10
 TOP = CHASSIS_H / 2           # chassis top face in base_link
 SOIL = TOP - 0.010            # soil surface, 1 cm under the rim
 WALL_SLOPE = 0.025 / 0.17     # pot wall: outward run per unit rise (sides and ends)
@@ -215,7 +218,7 @@ def build_imu() -> mk.LinkMesh:
 
 # Link poses in base_footprint for the preview assembly: (link, mesh, xyz)
 ASSEMBLY = [
-    ('base_link', 'chassis', (0, 0, BASE_Z)),
+    ('chassis', 'chassis', (CHASSIS_X, 0, BASE_Z)),
     ('left_wheel_link', 'wheel', (WHEEL_X, WHEEL_SEP / 2, BASE_Z)),
     ('right_wheel_link', 'wheel', (WHEEL_X, -WHEEL_SEP / 2, BASE_Z)),
     ('caster_link', 'caster', (CASTER_X, 0, CASTER_R)),
@@ -238,12 +241,17 @@ def main() -> dict:
         bpy.data.objects.remove(cube)
 
     links = mk.collection('serabot_links')
+    links.hide_viewport = False  # hidden objects cannot be selected for export
     builders = (build_chassis, build_wheel, build_caster, build_camera_mast,
                 build_camera, build_lidar, build_imu)
     objects = {}
     for build in builders:
         link = build()
         objects[link.name] = link.to_object(links)
+
+    # Same OBJ settings as the orientation test (raw Blender axes, ADR-015).
+    exported = [mk.export_obj(obj, os.path.join(MESHES, f'{name}.obj'))
+                for name, obj in objects.items()]
     # Link originals stay at the origin (exported as-is) and hidden in previews.
     links.hide_render = True
     links.hide_viewport = True
@@ -268,6 +276,7 @@ def main() -> dict:
         'triangles_robot': mk.triangle_count(assembly.objects),
         'bbox': {n: bbox(o) for n, o in objects.items()},
         'blend': BLEND,
+        'exported': {os.path.basename(p): os.path.getsize(p) for p in exported},
     }
 
 

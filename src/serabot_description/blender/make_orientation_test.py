@@ -2,11 +2,10 @@
 
 Run through the bridge:  python bridge_client.py make_orientation_test.py
 A grey 0.2 m cube with a red arrow along +X, a green arrow along +Y and a blue
-cap on +Z, exported as:
-  meshes/test/orientation_cube_yup.glb  (glTF default "+Y Up" conversion)
-  meshes/test/orientation_cube_zup.glb  (no conversion, raw Blender axes)
-  meshes/test/orientation_cube.obj/.mtl (Z up, Y forward = raw Blender axes)
-urdf/test/mesh_test.urdf.xacro shows them next to a primitive reference.
+cap on +Z, exported as meshes/test/orientation_cube.obj + .mtl (raw Blender axes).
+urdf/test/mesh_test.urdf.xacro shows it next to a primitive reference. The .glb
+variants were dropped after the test: RViz2 and Gazebo Jetty apply the glTF axis
+conversion differently (ADR-015).
 """
 
 import importlib
@@ -40,11 +39,7 @@ link.cylinder(0.05, 0.05, 0.03, blue, loc=(0, 0, 0.115))
 
 coll = mk.collection('orientation_test')
 obj = link.to_object(coll)
-paths = [
-    mk.export_glb(obj, os.path.join(OUT, 'orientation_cube_yup.glb'), yup=True),
-    mk.export_glb(obj, os.path.join(OUT, 'orientation_cube_zup.glb'), yup=False),
-    mk.export_obj(obj, os.path.join(OUT, 'orientation_cube.obj')),
-]
+mk.export_obj(obj, os.path.join(OUT, 'orientation_cube.obj'))
 result = {
     'triangles': mk.triangle_count([obj]),
     'bbox_min': [round(min(v.co[i] for v in obj.data.vertices), 3) for i in range(3)],

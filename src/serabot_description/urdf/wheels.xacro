@@ -21,24 +21,38 @@
     </joint>
 
     <link name="${side}_wheel_link">
-      <visual name="tire">
-        <origin xyz="0 0 0" rpy="${pi / 2} 0 0"/>
-        <geometry>
-          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
-        </geometry>
-        <xacro:serabot_material name="rubber"/>
-      </visual>
-      <visual name="hub">
-        <origin xyz="0 ${y_sign * wheel_width / 4} 0" rpy="${pi / 2} 0 0"/>
-        <geometry>
-          <cylinder radius="${wheel_radius / 2}" length="${wheel_width / 2 + 0.002}"/>
-        </geometry>
-        <xacro:serabot_material name="terracotta"/>
-      </visual>
+      <xacro:if value="${use_mesh_visuals}">
+        <!-- Symmetric mesh, axle along Y: the same file serves both sides -->
+        <visual name="wheel">
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <mesh filename="${mesh_dir}/wheel.obj"/>
+          </geometry>
+        </visual>
+      </xacro:if>
+      <xacro:unless value="${use_mesh_visuals}">
+        <visual name="tire">
+          <origin xyz="0 0 0" rpy="${pi / 2} 0 0"/>
+          <geometry>
+            <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+          </geometry>
+          <xacro:serabot_material name="rubber"/>
+        </visual>
+        <visual name="hub">
+          <origin xyz="0 ${y_sign * wheel_width / 4} 0" rpy="${pi / 2} 0 0"/>
+          <geometry>
+            <cylinder radius="${wheel_radius / 2}" length="${wheel_width / 2 + 0.002}"/>
+          </geometry>
+          <xacro:serabot_material name="terracotta"/>
+        </visual>
+      </xacro:unless>
+      <!-- Sphere, not cylinder: a cylinder touches the ground at its inner edge, which
+           shrinks the effective track (~0.325 m) and made /odom under-report in-place
+           rotation by ~11 %; the sphere's single contact keeps it at wheel_separation. -->
       <collision>
-        <origin xyz="0 0 0" rpy="${pi / 2} 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+          <sphere radius="${wheel_radius}"/>
         </geometry>
       </collision>
       <xacro:inertial_cylinder mass="${wheel_mass}" radius="${wheel_radius}"
@@ -60,9 +74,16 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <sphere radius="${caster_radius}"/>
+          <xacro:if value="${use_mesh_visuals}">
+            <mesh filename="${mesh_dir}/caster.obj"/>
+          </xacro:if>
+          <xacro:unless value="${use_mesh_visuals}">
+            <sphere radius="${caster_radius}"/>
+          </xacro:unless>
         </geometry>
-        <xacro:serabot_material name="grey"/>
+        <xacro:unless value="${use_mesh_visuals}">
+          <xacro:serabot_material name="grey"/>
+        </xacro:unless>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>

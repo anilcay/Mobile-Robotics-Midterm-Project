@@ -14,7 +14,12 @@ from mathutils import Vector
 
 PKG = os.path.dirname(os.path.dirname(__file__))
 
-# name: (camera location, look-at point, orthographic scale or None for perspective)
+# Robot centre in base_footprint: base_link is the axle middle and the chassis box is
+# centred 0.12 m ahead of it (ADR-017).
+CENTER = Vector((0.12, 0.0, 0.0))
+
+# name: (camera location, look-at point, orthographic scale or None for perspective),
+# both relative to CENTER
 VIEW_SETUPS = {
     'persp_front': (Vector((1.15, -0.95, 0.75)), Vector((0.0, 0.0, 0.21)), None),
     'persp_back': (Vector((-1.1, 0.95, 0.72)), Vector((0.0, 0.0, 0.21)), None),
@@ -76,6 +81,7 @@ def render(names, out_dir, res) -> list:
     paths = []
     for name in names:
         loc, look, ortho = VIEW_SETUPS[name]
+        loc, look = loc + CENTER, look + CENTER
         cam.location = loc
         if name == 'top':
             cam.rotation_euler = (0, 0, -math.pi / 2)  # robot front (+X) at image top
