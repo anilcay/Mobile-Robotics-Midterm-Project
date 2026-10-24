@@ -20,6 +20,9 @@ desktop.ini
 # Claude Code local settings
 .claude/settings.local.json
 
+# Blender save backups
+*.blend1
+
 # Large media (keep demo videos out of git; link them instead)
 *.mp4
 *.mkv
