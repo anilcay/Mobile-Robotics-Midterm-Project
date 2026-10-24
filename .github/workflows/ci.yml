@@ -16,7 +16,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: src/repo
 
@@ -38,8 +38,27 @@ jobs:
           xacro "$(ros2 pkg prefix --share serabot_description)/urdf/serabot.urdf.xacro" > serabot.urdf
           check_urdf serabot.urdf
 
+      # Linter tests skip themselves when ament_flake8 is missing (for local
+      # Windows runs), so make sure CI really has it.
+      - name: Check linters are available
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          if ! err=$(python3 -c "import ament_flake8.main" 2>&1); then
+            echo "::error::ament_flake8 import failed: $(echo "$err" | tail -1)"
+            exit 1
+          fi
+
       - name: Test
         run: |
           source install/setup.bash
           colcon test --event-handlers console_cohesion+
           colcon test-result --verbose
+
+      # Job logs need a GitHub login; annotations are public, so surface the
+      # failing test output there as well.
+      - name: Report test failures
+        if: failure()
+        run: |
+          colcon test-result --verbose 2>&1 | grep -v '^$' | tail -n 8 | while read -r line; do
+            echo "::error::$line"
+          done
