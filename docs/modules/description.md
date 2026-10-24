@@ -1,6 +1,6 @@
 # Modül S1 — Robot Modeli (`serabot_description`)
 
-- **Sorumlu:** Üye A · **Faz:** F1 (26–28 Eki) · **Durum:** Model tamam — ADR-017 uygulandı, konsept B `.obj` mesh'leri URDF'e bağlandı; VM'de build, `check_urdf` ve yerinde dönüş testi geçti · Tekerlek çarpışması küre (odometri yaw sapması giderildi) · RViz ekran görüntüsü VM ekran kilidi nedeniyle bekliyor
+- **Sorumlu:** Üye A · **Faz:** F1 (26–28 Eki) · **Durum:** Model tamam — ADR-017 uygulandı, konsept B `.obj` mesh'leri URDF'e bağlandı; VM'de build, `check_urdf` ve yerinde dönüş testi geçti · Tekerlek çarpışması küre (odometri yaw sapması giderildi) · Mesh'ler RViz ve Gazebo'da yükleniyor · İki renk seti: `meshes/` (RViz, sRGB) + `meshes/gazebo/` (Gazebo, doğrusal), xacro `gazebo_mesh_colors` · S2/S0 isteği açık
 - **Sahip olunan yollar:** `src/serabot_description/` — ana `urdf/serabot.urdf.xacro` (S0) ve `urdf/sensors/` (sensör sahipleri) hariç
 - **Bağımlı olduğu:** `INTERFACES.md` §3 (frame'ler), §4 (boyutlar), §4.1 (mesh), §5 (eklentiler)
 - **Ona bağımlı olanlar:** S2 (spawn), S3a/b/c (montaj linkleri, sensör mesh'leri), S4 (tekerlek geometrisi)
@@ -24,7 +24,10 @@ Görsel model **Blender'da** hazırlanır; çarpışma modeli primitif kalır (A
 - [x] ADR-017: `base_link` aks ortasına
 - [x] Link mesh'lerinin `.obj` + `.mtl` dışa aktarımı, `visual` bloklarının mesh'e çevrilmesi (primitif yedek bayrağıyla)
 - [x] Rapor görselleri: `docs/report/serabot_{persp_front,persp_back,front,side,top}.png`
-- [ ] RViz'de mesh'li modelin ekran görüntüsü (VM ekran kilidi açılınca)
+- [x] RViz ve Gazebo'da mesh'li modelin ekran görüntüsü (VM, 2026-10-24)
+- [x] MTL renk değerleri için RViz/Gazebo karşılaştırması (doğrusal ve sRGB, VM ekran görüntüleriyle)
+- [x] İki renk seti (kullanıcı kararı, seçenek c): `meshes/` sRGB + `meshes/gazebo/` doğrusal, xacro `gazebo_mesh_colors`
+- [ ] Bringup'ın Gazebo'ya `gazebo_mesh_colors:=true` ile üretilmiş URDF'i spawn etmesi (S2, "Açık istekler")
 - [x] Tekerlek çarpışması küre r = 0.08 (kullanıcı kararı; odometri yaw sapması %10.7 → %0.1)
 
 ## Tamamlanma kriteri
@@ -84,7 +87,13 @@ Görsel model **Blender'da** hazırlanır; çarpışma modeli primitif kalır (A
   Ölçüt (konum kayması ve `/odom` konum hatası < 0.02 m) iki durumda da ✅; ADR-017 öncesi ~0.12 m yay çiziyordu. Silindirde gövde odometrinin bildirdiğinden %10.7 fazla dönüyordu (etkin tekerlek aralığı ≈ 0.325 m) → küre seçildi.
 - **Düz sürüş (küre, 0.25 m/s, ~6 s):** 1.32 m ileri; yanal sapma 0.0000 m, yön değişimi 0.00°, `/odom` konum hatası 4.9 mm, yaw hatası 0.00° ✅.
   - Ölçüm betiği gerçek konumu `/world/empty/pose/info`'dan, odometriyi `/odom`'dan `gz topic` ile okur; dönerken alınan örneklerde iki okuma arasındaki ~0.4 s yüzünden yaw farkı abartılı görünür, bu yüzden yaw sadece durunca karşılaştırıldı.
-- RViz'de mesh'li model: ⏳ VM ekranı kilitli/karartılmış (GNOME ekran koruyucusu aktif); kilit açılınca alınacak.
+- **RViz'de mesh'li model (`display.launch.py`):** ✅ şasi, tekerlekler, caster ve direk mesh'leri doğru yerde ve yönde; `base_footprint` sabit çerçeve, TF etiketleri görünür; log'da hata yok; ~28 fps (llvmpipe). Kamera tomurcuğu ve LiDAR çakılı görünmez — sensör xacro'ları henüz boş (beklenen). **Renkler Blender render'larından belirgin koyu** (toprak neredeyse siyah, saksı koyu bordo) → Açık sorunlar.
+- **Gazebo GUI'de mesh'li model (`empty.sdf` + spawn):** ✅ mesh'ler bulunuyor ("Unable to find file" yok), yön doğru, renkler yükleniyor; RViz'den açık ama yine Blender'dan koyu/kahverengimsi.
+- Ekran görüntüleri (`VBoxManage controlvm ubuntu screenshotpng`) S1 oturumunda alındı; renk düzeltmesinden sonra rapor için yeniden alınacak.
+- **MTL renk düzeltmesi (2026-10-24):** `mesh_kit.export_obj` dışa aktarımdan sonra `.mtl` `Kd` değerlerini doğrusaldan sRGB'ye çeviriyor. Yeniden aktarılan dosyalarda `Kd` tasarım paletiyle birebir (örn. toprak 0.27/0.19/0.14, saksı 0.78/0.39/0.23; önce 0.06/0.03/0.02 ve 0.57/0.13/0.04). Geometri değişmedi (vertex ve normal kümeleri commit'teki `.obj` ile aynı; Blender sadece normal sırasını farklı yazdığı için `.obj`'ler commit'teki haliyle bırakıldı). VM'de `colcon build` ✅, kurulu `chassis.mtl` yeni değerleri içeriyor. - **Doğrusal ve sRGB `Kd` karşılaştırması (VM, 2026-10-24, aynı kamera açıları):** RViz2'de sRGB değerler Blender render'larına çok daha yakın (saksı turuncu-kiremit; doğrusal değerlerde koyu bordo, toprak siyaha yakın). Gazebo Jetty'de ise sRGB değerlerle renkler soluk/pastel; doğrusal değerler daha doygun ve tasarıma daha yakın. Yorum: Gazebo (ogre2, gamma düzeltmeli PBS) MTL rengini doğrusal kabul ediyor, RViz2 (Ogre 1) ekran rengi olarak — `.glb` yön sorununa benzer bir uyuşmazlık. Ekran görüntüleri S1 oturumunda.
+- **İki renk seti (2026-10-24, kullanıcı kararı):** `mesh_kit.export_obj(..., linear_dir=...)` her link için `meshes/<link>.obj` + sRGB `.mtl` (RViz2) yazar ve aynı `.obj`'yi Blender'ın doğrusal `.mtl`'iyle `meshes/gazebo/`'ya kopyalar. `properties.xacro`: `<xacro:arg name="gazebo_mesh_colors" default="false"/>` → `mesh_dir` `meshes/` ya da `meshes/gazebo/`.
+  - Windows: iki setin `.obj`'leri bayt bayt aynı; Gazebo `Kd` = RViz `Kd`'nin doğrusal karşılığı (7 link, tolerans 2e-4). Statik kontrol üç varyantta tümü geçti (varsayılan → `meshes/*.obj`, `gazebo_mesh_colors:=true` → `meshes/gazebo/*.obj`, `use_mesh_visuals=false` → primitif). `.obj`'ler commit'teki haliyle bırakıldı (Blender yeniden aktarımda sadece normal sırasını değiştiriyor).
+  - VM: `colcon build` ✅ (`share/.../meshes/gazebo/` kurulu, 14 dosya); `xacro ... gazebo_mesh_colors:=true` + `check_urdf` ✅; Gazebo'da bu URDF ile robot doygun, tasarıma yakın renklerde ✅ ("Unable to find file" yok). RViz'de varsayılan set (sRGB) önceki ekran görüntüsündeki gibi ✅.
 
 **Tekrar üretme (VM'de, repo kökünden):**
 
@@ -97,10 +106,14 @@ RViz (VM masaüstünde): `ros2 launch serabot_description display.launch.py` · 
 
 ## Açık istekler
 
+- **S2'ye — Gazebo spawn renk seti:** `bringup.launch.py` robot_state_publisher için URDF'i varsayılan argümanlarla (`meshes/`, RViz renkleri), Gazebo'ya spawn edilecek URDF'i `gazebo_mesh_colors:=true` ile üretmeli (`meshes/gazebo/`, Gazebo renkleri). Yani spawn `robot_description` topic'inden değil, ayrı bir xacro çıktısından (`ros_gz_sim create -string` veya `-file`) yapılmalı. Argüman verilmezse model yine çalışır, sadece Gazebo'da renkler soluk olur.
+- **S0'a — `INTERFACES.md`:** §6 xacro argümanlarına `gazebo_mesh_colors` (varsayılan `false`; Gazebo'ya spawn edilen URDF için `true`) eklenmesi; §4.1'e "renk seti: `meshes/<link>.obj` + sRGB `.mtl` (RViz2), `meshes/gazebo/<link>.obj` + doğrusal `.mtl` (Gazebo Jetty)" notu. Argüman `properties.xacro`'da tanımlı (ana xacro'da değişiklik gerekmiyor).
 - **S0'a — `INTERFACES.md` §4.1 notu:** "Çarpışma: §4'teki boyutlarla primitif geometri" kuralına bir istisna: tekerlek çarpışması küre r = 0.08 (tekerlek genişliği 0.04 değil). Gerekçe ve ölçüm yukarıda (odometri yaw sapması). Robotun çarpışma genişliği 0.52 m — S4'ün dar geçit/engel mesafesi ayarlarında dikkate alınmalı.
-- **Sensör sahiplerine (S0 iletir):** görsel mesh'ler hazır — `package://serabot_description/meshes/lidar.obj`, `camera.obj`, `imu.obj` (orijinleri kendi link frame'inde: `lidar_link`, `camera_link`, `imu_link`; `origin` 0, `<material>` etiketi yok). Montaj property'leri `../properties.xacro`'da (`lidar_x/y/z`, `imu_x/y/z`, `camera_z`). Primitif yedek için `use_mesh_visuals` property'sine uyulabilir.
+- **Sensör sahiplerine (S0 iletir):** görsel mesh'ler hazır — `${mesh_dir}/lidar.obj`, `camera.obj`, `imu.obj` (`mesh_dir` `properties.xacro`'dan; renk setini `gazebo_mesh_colors` seçer; orijinleri kendi link frame'inde: `lidar_link`, `camera_link`, `imu_link`; `origin` 0, `<material>` etiketi yok). Montaj property'leri `../properties.xacro`'da (`lidar_x/y/z`, `imu_x/y/z`, `camera_z`). Primitif yedek için `use_mesh_visuals` property'sine uyulabilir.
 
 ## Açık sorunlar
 
+- **İki renk seti bakımı:** `meshes/gazebo/*.obj` `meshes/*.obj` ile aynı olmalı; mesh'ler her zaman `build_serabot.py` ile birlikte üretilmeli (elle tek dosya değiştirilmemeli). RViz'de toprak hâlâ koyu görünüyor — RViz'in tek ve zayıf ışığı (renk değeri doğru).
+- **VM ekran kilidi (çözüldü):** kullanıcı GNOME otomatik kilidini ve ekran karartmayı kapattı (`lock-enabled false`, `idle-delay 0`).
 - **⚠ Doğrulanacak (Linux) — sensör kendi gövdesini görüyor mu:** LiDAR çakılı ve kamera tomurcuğu sensör noktasını sarıyor. OBJ'de tek/çift taraf bayrağı yok; Gazebo'nun malzemeyi tek taraflı (arka yüz gizli) çizip çizmediği sensörler eklenince görülecek. Üye A `/scan`'de ~0.03–0.05 m'de sabit okuma, Üye B görüntüde yeşil/koyu kaplama olup olmadığını kontrol etmeli. Sorun olursa sensör `visual`'ında pencere boşluğu bırakılır veya `visibility_flags` kullanılır.
 - **Rapor görselleri boyutu:** 5 PNG toplam ~8 MB. Repo boyutu sorun olursa JPEG'e çevrilebilir.

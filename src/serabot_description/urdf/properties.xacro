@@ -10,7 +10,18 @@
   <!-- Visuals: Blender meshes (meshes/*.obj) or the primitive fallback (false), e.g. when
        software rendering is too slow. Collisions are always primitives (ADR-012). -->
   <xacro:property name="use_mesh_visuals" value="true"/>
-  <xacro:property name="mesh_dir" value="package://serabot_description/meshes"/>
+
+  <!-- Mesh colour set. RViz2 reads MTL colours as display (sRGB) values, Gazebo Jetty as
+       linear ones, so meshes/ holds sRGB MTLs and meshes/gazebo/ the same OBJs with linear
+       MTLs. Generate the URDF that is spawned in Gazebo with gazebo_mesh_colors:=true;
+       robot_state_publisher / RViz keep the default. -->
+  <xacro:arg name="gazebo_mesh_colors" default="false"/>
+  <xacro:if value="$(arg gazebo_mesh_colors)">
+    <xacro:property name="mesh_dir" value="package://serabot_description/meshes/gazebo"/>
+  </xacro:if>
+  <xacro:unless value="$(arg gazebo_mesh_colors)">
+    <xacro:property name="mesh_dir" value="package://serabot_description/meshes"/>
+  </xacro:unless>
 
   <!-- base_link is the middle of the wheel axle at axle height; base_footprint is its
        ground projection (contract, ADR-017). All x values below are from base_link. -->
