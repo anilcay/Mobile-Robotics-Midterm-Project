@@ -32,7 +32,7 @@ start() {
     if running; then return; fi
     docker rm -f "$NAME" >/dev/null 2>&1 || true
     local args=(
-        --detach --name "$NAME"
+        --detach --name "$NAME" --init
         --network host --ipc host
         --volume "$REPO_ROOT:/ws"
         --volume /tmp/.X11-unix:/tmp/.X11-unix:ro
