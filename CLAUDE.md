@@ -38,6 +38,8 @@ Birden fazla Claude oturumu **aynı klasörde** çalışır. Çakışmayı önle
 | S3c IMU (ortak) | `docs/modules/sensor-imu.md` | `urdf/sensors/imu.xacro`, `config/bridge/imu.yaml`, `serabot_sensors/` içindeki imu dosyaları |
 | S4 Davranış | `docs/modules/behavior.md` | `src/serabot_behavior/`, `src/serabot_bringup/config/behavior.yaml` |
 
+**Ortak klasörler:** `scripts/sim/` (simülasyon test/ölçüm betikleri) ve `docs/report/<modül>/` (rapor görselleri ve ölçüm çıktıları) altına her oturum **kendi adıyla yeni dosya** ekleyebilir; başkasının dosyasını değiştirmez.
+
 **Kurallar:**
 - Sadece sahibi olduğun dosyaları değiştir. Başka bir dosyada değişiklik gerekiyorsa kendi modül dosyanın **"Açık istekler"** bölümüne yaz ve kullanıcıya bildir; S0 uygular.
 - `docs/INTERFACES.md` içindeki bir şeyi (topic adı, frame, mesaj tipi, boyut) **değiştirme**. Değişiklik gerekiyorsa açık istek olarak yaz. Arayüzler sadece S0 tarafından, `DECISIONS.md` kaydıyla değiştirilir.

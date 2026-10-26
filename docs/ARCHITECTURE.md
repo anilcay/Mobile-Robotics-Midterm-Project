@@ -101,27 +101,30 @@ odom                       (DiffDrive, bridge üzerinden /tf)
 
 Argümanlar ve varsayılanlar: [INTERFACES.md §6](INTERFACES.md#6-launch-argümanları)
 
-## 6. Davranış node'u (taslak)
+## 6. Davranış node'u
 
 Giriş: `/scan` (zorunlu), `/imu` (dönüş açısı), `/camera/target` (opsiyonel). Çıkış: `/cmd_vel`. Döngü: 10 Hz zamanlayıcı.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> CRUISE
-  CRUISE --> AVOID: ön sektör min mesafe < obstacle_distance
-  AVOID --> CRUISE: dönüş açısı >= turn_angle VE ön sektör > clear_distance
-  CRUISE --> TRACK: use_camera VE hedef görüldü
-  TRACK --> INSPECT: hedef alanı > inspect_area
+  [*] --> WAIT
+  WAIT --> CRUISE: taze /scan geldi
+  CRUISE --> WAIT: /scan eski (> scan_timeout)
+  CRUISE --> AVOID: front_min < obstacle_distance
+  CRUISE --> EMERGENCY: front_min < emergency_distance
+  AVOID --> CRUISE: dönüş açısı >= turn_angle VE front_min > clear_distance
+  AVOID --> EMERGENCY: iki yönde de dönüş yeri yok
+  EMERGENCY --> AVOID: backup_duration doldu
+  CRUISE --> TRACK: use_camera VE taze hedef
+  TRACK --> INSPECT: hedef alanı >= inspect_area VEYA yatağa varıldı
   TRACK --> CRUISE: hedef kayboldu
-  TRACK --> AVOID: ön sektör min mesafe < obstacle_distance
-  INSPECT --> AVOID: inspect_duration doldu (aynı hedeften uzaklaş)
-  CRUISE --> EMERGENCY: herhangi bir ön ölçüm < emergency_distance
-  AVOID --> EMERGENCY: herhangi bir ön ölçüm < emergency_distance
-  EMERGENCY --> AVOID: geri çekilme süresi doldu
+  TRACK --> EMERGENCY: front_min < emergency_distance
+  INSPECT --> AVOID: inspect_duration doldu (target_cooldown başlar)
 ```
 
-- **CRUISE:** sabit ileri hız.
-- **AVOID:** daha açık olan tarafa (sol/sağ sektör ortalamasına göre) yerinde dön; dönülen açı IMU açısal hızının integrali ile ölçülür.
+- **WAIT:** tarama yok/eski → dur.
+- **CRUISE:** sabit ileri hız + koridor ortalama (`centering_gain`).
+- **AVOID:** dönüş yeri olan taraflardan daha açık olana yerinde dön; dönülen açı IMU açısal hızının integrali (IMU yoksa zaman tabanlı yedek). Gövdenin süpürdüğü yarıçap 0.376 m hesaba katılır.
 - **TRACK** (opsiyonel katman): `angular.z = -k · offset`, yavaş ileri hız.
 - **INSPECT:** dur, `inspect_duration` saniye bekle (ürün "denetleniyor").
 - **EMERGENCY:** dur ve kısa süre geri git.

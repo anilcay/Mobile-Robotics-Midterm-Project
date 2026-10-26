@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.8 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017) · 0.7: renk setleri + `gazebo_mesh_colors`, tekerlek küre çarpışması (§4.1, §6, ADR-019), karma dünya (§4.2, ADR-018) · 0.8: spawn varsayılanı (−4.0, 0.875, 0) ve dünya yerleşimi (§4.2, §6)
+**Sürüm:** 0.9 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017) · 0.7: renk setleri + `gazebo_mesh_colors`, tekerlek küre çarpışması (§4.1, §6, ADR-019), karma dünya (§4.2, ADR-018) · 0.8: spawn varsayılanı (−4.0, 0.875, 0) ve dünya yerleşimi (§4.2, §6) · 0.9: davranış parametreleri ve `WAIT` durumu (§2.5, §7), `headless` argümanı (§6)
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -60,7 +60,7 @@ Not: `/cmd_vel` tipi `Twist` (stamped değil). Lyrical'da `teleop_twist_keyboard
 | `/camera/target` | `geometry_msgs/msg/PointStamped` | `color_detector` | `behavior_node` | Sadece hedef görülünce yayınlanır. `point.x` = yatay ofset [-1, 1] (sol negatif), `point.y` = görüntü alanı oranı [0, 1], `point.z` = 0. Son mesajdan 0.5 s geçtiyse "hedef yok". |
 | `/camera/image_annotated` | `sensor_msgs/msg/Image` | `color_detector` | rqt_image_view | Tespit kutusu çizilmiş görüntü (görselleştirme). |
 | `/imu/rpy` | `geometry_msgs/msg/Vector3Stamped` | `imu_monitor` | rqt_plot | Roll/pitch/yaw, derece (görselleştirme). |
-| `/behavior/state` | `std_msgs/msg/String` | `behavior_node` | — | Aktif durum adı (CRUISE, AVOID, …), sunum ve hata ayıklama için. |
+| `/behavior/state` | `std_msgs/msg/String` | `behavior_node` | — | Aktif durum adı: `WAIT`, `CRUISE`, `AVOID`, `EMERGENCY`, `TRACK`, `INSPECT` — sunum ve hata ayıklama için. |
 
 ## 3. Frame'ler
 
@@ -161,6 +161,7 @@ DiffDrive parametreleri: `left_joint=left_wheel_joint`, `right_joint=right_wheel
 | `rviz` | `true` | RViz2'yi aç |
 | `behavior` | `false` | Davranış node'unu başlat |
 | `sensors` | `true` | Yardımcı sensör node'larını (`color_detector`, `imu_monitor`) başlat |
+| `headless` | `false` | `true`: Gazebo GUI'siz (`-s`) çalışır; RViz tek görsel. VM'de RTF ≈ 0.38 → ≈ 0.48 (S3 ölçümü). S2 uygulayacak |
 | `x`, `y`, `yaw` | `-4.0`, `0.875`, `0.0` | Spawn pozisyonu: batı dönüş alanı, y = +0.875 koridorunun girişi, +x yönüne bakar |
 
 Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu` — varsayılan `true`; `gazebo_mesh_colors` — varsayılan `false` (RViz renk seti). `robot_state_publisher`'a giden URDF varsayılanla, Gazebo'ya spawn edilen URDF `gazebo_mesh_colors:=true` ile üretilir (spawn `robot_description` topic'inden değil, ayrı xacro çıktısından).
@@ -180,6 +181,16 @@ Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu`
 | `inspect_area` | 0.08 | oran |
 | `inspect_duration` | 3.0 | s |
 | `control_rate` | 10.0 | Hz |
+| `side_sector_deg` | 100 | derece — yan sektörler (`front_sector_deg`, `side_sector_deg`] |
+| `lidar_offset_x`, `body_front_x`, `body_rear_x` | 0.22, 0.345, −0.105 | m (`base_link`'e göre, §4'ten türetilmiş) |
+| `chassis_half_width`, `body_half_width` | 0.15, 0.26 | m (0.26 = tekerlek küreleri, ADR-019) |
+| `side_margin`, `rotate_margin`, `rotate_sweep_deg` | 0.05, 0.02, 90 | m, m, derece |
+| `backup_speed`, `backup_duration`, `rear_clear_distance` | 0.1, 1.5, 0.15 | m/s, s, m |
+| `scan_timeout`, `imu_timeout`, `target_timeout` | 0.5, 0.3, 0.5 | s |
+| `track_gain`, `track_speed`, `target_cooldown` | 0.8, 0.12, 8.0 | rad/s, m/s, s |
+| `centering_gain`, `centering_range`, `max_centering` | 0.5, 1.0, 0.3 | rad/s/m, m, rad/s |
+
+Karar kuralının tamamı: `docs/modules/behavior.md`, `docs/report/behavior/behavior_design.md`.
 
 ## 8. Xacro makro sözleşmesi
 
