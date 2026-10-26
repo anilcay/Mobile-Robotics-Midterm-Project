@@ -125,8 +125,9 @@ def generate_launch_description() -> LaunchDescription:
         DeclareLaunchArgument(
             'sensors', default_value='true',
             description='Start helper sensor nodes (color_detector, imu_monitor)'),
-        DeclareLaunchArgument('x', default_value='0.0', description='Spawn x [m]'),
-        DeclareLaunchArgument('y', default_value='0.0', description='Spawn y [m]'),
+        # Default spawn: west turning area, at the entry of the y = +0.875 corridor.
+        DeclareLaunchArgument('x', default_value='-4.0', description='Spawn x [m]'),
+        DeclareLaunchArgument('y', default_value='0.875', description='Spawn y [m]'),
         DeclareLaunchArgument('yaw', default_value='0.0', description='Spawn yaw [rad]'),
 
         IncludeLaunchDescription(

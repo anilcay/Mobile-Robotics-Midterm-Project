@@ -51,7 +51,7 @@
   - **LiDAR notu:** `gpu_lidar` çarpışmayı değil görseli görür. 0.18 m düzleminde sadece kasa kalasları (dış yüzü çarpışma kutusuyla aynı), saksı gövdesi ve duvarlar var; bitkiler ≥ 0.38 m, iskelet dikmeleri duvar kutularının içinde → LiDAR geometrisi primitif dünyayla aynı kalır.
   - **İki dünya:** generator `greenhouse.sdf` (çarpışma primitif + mesh görseller) ve `greenhouse_primitive.sdf` (önceki sade dünya) üretir. Yavaş render'da `world:=greenhouse_primitive.sdf` (yeni argüman yok).
   - Önizleme render'ları (Blender EEVEE: genel, robot gözü, yakın plan) oturum çalışma alanında; rapor için gerekirse `docs/report/` altına S0 koyar.
-- **Spawn noktası:** (x, y, yaw) = (−4.0, 0.875, 0.0) — batı dönüş alanı, ortadaki iki yatak arasındaki koridorun girişi, koridora (+x) bakar. Varsayılan `0,0` ortadaki yatağın içine denk geliyor → açık istek.
+- **Spawn noktası:** (x, y, yaw) = (−4.0, 0.875, 0.0) — batı dönüş alanı, ortadaki iki yatak arasındaki koridorun girişi, koridora (+x) bakar. `INTERFACES.md` v0.8 §6'da onaylandı; `bringup.launch.py` varsayılanları güncellendi (2026-10-26).
 
 ## Doğrulama
 
@@ -78,6 +78,8 @@
 
   → Süslerin RTF'ye ölçülebilir etkisi yok. Not: bugünkü ortalama (≈0.39) ilk ölçümdeki anlık değerlerden (0.6–0.8, GUI'deki yüzde de anlık) düşük; anlık `real_time_factor` çok dalgalı (0.03–1.7), bu yüzden karşılaştırmada 30 s ortalaması kullanıldı. Darboğaz süs değil, VM'in yazılımsal render'ı + fizik.
 
+**Spawn varsayılanı (VM, 2026-10-26):** `--show-args` → `x` −4.0, `y` 0.875, `yaw` 0.0 ✅; argümansız `ros2 launch serabot_bringup bringup.launch.py rviz:=false` → "Entity creation successful", `gz model -m serabot -p` = (−4.000, 0.875, 0) ✅.
+
 **Tekrar üretme:**
 ```bash
 scripts/sync_to_vm.sh
@@ -86,15 +88,17 @@ ssh serabot-vm 'cd serabot_ws && docker/run.sh exec "colcon build && gz sdf -k i
 #   python src/serabot_gazebo/tools/generate_greenhouse.py
 #   python src/serabot_description/blender/bridge_client.py src/serabot_gazebo/blender/build_greenhouse.py
 # VM masaüstünde (konteyner kabuğu):
-ros2 launch serabot_bringup bringup.launch.py x:=-4.0 y:=0.875
+ros2 launch serabot_bringup bringup.launch.py
 ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.25}}"
 ```
 
 ## Açık istekler (S0'a)
 
-- **`INTERFACES.md` §6 — spawn varsayılanı:** `x` = −4.0, `y` = 0.875, `yaw` = 0.0 (batı dönüş alanı, y = +0.875 koridorunun girişi, +x yönüne bakar). Onaylanınca `bringup.launch.py` varsayılanlarını ben güncellerim. (§6 "S2 dünyaya göre güncelleyecek" diyor; yine de sözleşme tablosu olduğu için S0'a bırakıyorum.)
-- **`serabot_bringup/package.xml`:** launch dosyası `yaml` (PyYAML) kullanıyor → `<exec_depend>python3-yaml</exec_depend>` eklenmesi. (ROS imajında zaten kurulu; sadece manifest doğruluğu.)
-- **`INTERFACES.md` §4.2'ye not (isteğe bağlı):** dünya yerleşimi (yatak/koridor/saksı koordinatları) yukarıda; S4 ve kamera sahibi bunları test senaryolarında kullanabilir.
+- ~~`INTERFACES.md` §6 — spawn varsayılanı (−4.0, 0.875, 0.0)~~ ✅ v0.8'de uygulandı (`c85a9d2`); launch varsayılanları güncellendi.
+- ~~`serabot_bringup/package.xml` — `python3-yaml`~~ ✅ uygulandı (`c85a9d2`).
+- ~~`INTERFACES.md` §4.2 — dünya yerleşimi notu~~ ✅ v0.8'de eklendi (`c85a9d2`).
+
+Açık istek yok.
 
 ## Açık sorunlar
 
