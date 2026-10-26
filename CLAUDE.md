@@ -85,7 +85,7 @@ Geliştirme şu an **Windows 10** üzerinde yapılıyor; ROS 2 / Gazebo yerelde 
 - Her sensör kendi dosyasında (`urdf/sensors/<sensör>.xacro`) bir xacro makrosu olarak tanımlanır; link, joint ve `<gazebo>` sensör bloğu bu dosyadadır.
 - Ana xacro'nun çağırdığı makro adları ve parametreleri sözleşmedir (`INTERFACES.md` §8). S0'ın oluşturduğu `PLACEHOLDER` dosyalarında sadece makro gövdesi değiştirilir.
 - Görsel modeller Blender'da hazırlanan mesh'lerdir; çarpışma modelleri primitiftir. Mesh kuralları: `INTERFACES.md` §4.1 (ADR-012).
-- Gazebo dünyaları sadece primitif geometri kullanır (internetten Fuel modeli indirilmez).
+- Gazebo dünyası karma: çarpışma/LiDAR geometrisi primitif, görsel süsler Blender `.obj` (`INTERFACES.md` §4.2, ADR-018). İnternetten Fuel modeli indirilmez.
 
 **Launch:**
 - Python launch dosyaları (`*.launch.py`). Argümanlar `DeclareLaunchArgument` ile, açıklamalı.

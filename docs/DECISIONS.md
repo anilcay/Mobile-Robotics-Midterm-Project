@@ -45,7 +45,7 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Karar:** Kod, yorumlar, commit mesajları ve README İngilizce; `CLAUDE.md` ve `docs/` Türkçe.
 
 ## ADR-008 — Dünyada sadece primitif geometri
-- **Tarih:** 2026-10-24 · **Durum:** Kabul
+- **Tarih:** 2026-10-24 · **Durum:** Değiştirildi (ADR-018)
 - **Bağlam:** Gazebo Fuel modelleri çalışma anında internet gerektirir; demo sırasında risk.
 - **Karar:** Sera dünyası kutu/silindir/küre gibi primitiflerle repoda tanımlanır.
 - **Sonuç:** Çevrimdışı çalışır, tekrarlanabilir.
@@ -101,3 +101,15 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Bağlam:** Aks `base_link`'in 0.12 m gerisindeydi. gz DiffDrive odometriyi dönme merkezi (aks ortası) için hesaplayıp `base_footprint` adıyla yayınlıyor. VM testinde (ADR-016) yerinde dönüşte gövdenin ~0.12 m yarıçaplı yay çizdiği ve `/odom`'un gerçek konumdan ~0.14 m saptığı ölçüldü; RViz'de (`odom` sabit çerçevesi) LiDAR noktaları dönüşlerde kayar, hata birikir.
 - **Karar:** `base_link` (ve `base_footprint`) aks ortasına taşınır. Robotun dış görünüşü ve ölçüleri değişmez; `base_link`'e göre montaj noktaları x'te +0.12 m kayar (`INTERFACES.md` §4, v0.6). IMU dönme merkezine (`x = 0`) yerleşir.
 - **Sonuç:** `odom → base_footprint` fiziksel olarak doğru olur. S1 `properties.xacro`'yu günceller; şasi mesh'i kendi merkezinde kalabilir, ofset `visual` `origin` ile verilir (§4.1 istisnası). Sensör modülleri henüz başlamadığı için başka etkilenen yok.
+
+## ADR-018 — Karma sera dünyası
+- **Tarih:** 2026-10-26 · **Durum:** Kabul (ADR-008'in yerine)
+- **Bağlam:** ADR-008 internet bağımlılığını önlemek için sadece primitif geometri öngörüyordu. Repoda tutulan Blender modelleri de çevrimdışı çalışır; ekip robot gibi çevrenin de özenli görünmesini istiyor.
+- **Karar:** Çarpışma ve LiDAR'ın gördüğü yapı (duvarlar, bitki yatakları, saksılar) SDF primitifleri; görsel süsler (bitkiler, domatesler, sera iskeleti) Blender'da `.obj` + `.mtl` olarak `serabot_gazebo/models/` altında. Önce primitif dünya çalışır hale getirilir, süsler sonra. Dünya görselleri ≤ 150k üçgen. Kurallar `INTERFACES.md` §4.2.
+- **Sonuç:** Sensör davranışı öngörülebilir kalır, kamera görüntüsü ve demo zenginleşir. VM'in yazılımsal render'ı nedeniyle bütçe aşılmamalı; S2 gerçek zaman oranını ölçüp raporlar.
+
+## ADR-019 — Tekerlek çarpışması küre ve iki mesh renk seti
+- **Tarih:** 2026-10-26 · **Durum:** Kabul (S1 isteği)
+- **Bağlam:** S1, VM testlerinde silindir tekerlek çarpışmasının odometride yaw sapmasına yol açtığını ölçtü; ayrıca aynı `.mtl` renkleri RViz2 (sRGB) ve Gazebo (doğrusal) arasında farklı göründü.
+- **Karar:** Tekerlek `collision` geometrisi küre r = 0.08 m (görsel değişmez); robotun çarpışma genişliği 0.52 m olur. Mesh'ler iki renk setiyle üretilir (`meshes/` RViz, `meshes/gazebo/` Gazebo); xacro argümanı `gazebo_mesh_colors` seçer, Gazebo'ya spawn edilen URDF `true` ile üretilir.
+- **Sonuç:** S2 spawn'ı ayrı bir xacro çıktısından yapar (`INTERFACES.md` §6). S4 dar geçit/engel eşiklerinde 0.52 m genişliği hesaba katar.

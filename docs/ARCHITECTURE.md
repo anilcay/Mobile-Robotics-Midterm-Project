@@ -18,7 +18,7 @@ Boyutlar ve montaj pozisyonları: [INTERFACES.md §4](INTERFACES.md#4-robot-boyu
 ```
 src/
 ├── serabot_description/   ament_cmake — URDF/Xacro, meshes, model kontrol launch'ı
-├── serabot_gazebo/        ament_cmake — sera dünyası (SDF), primitif modeller
+├── serabot_gazebo/        ament_cmake — sera dünyası (SDF), primitif çarpışma + Blender süs modelleri
 ├── serabot_bringup/       ament_cmake — tek launch dosyası, ros_gz_bridge yaml'ları, RViz config
 ├── serabot_sensors/       ament_python — sensör yardımcı node'ları (renk dedektörü, IMU izleme vb.)
 └── serabot_behavior/      ament_python — davranış node'u + saf karar mantığı + testler

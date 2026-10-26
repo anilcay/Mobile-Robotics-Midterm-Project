@@ -7,7 +7,7 @@
 
 ## Görevler
 
-- [ ] `worlds/greenhouse.sdf` — yaklaşık 10 × 6 m sera: dış duvarlar, 3 bitki sırası (yükseklik ≥ 0.4 m, LiDAR düzleminde görünür), koridorlarda saksı engelleri, sıraların üstünde kamera yüksekliğinde (~0.4–0.5 m) kırmızı "domates" küreleri ve yeşil yapraklar. Sadece primitif geometri (ADR-008).
+- [ ] `worlds/greenhouse.sdf` — yaklaşık 10 × 6 m sera: dış duvarlar, 3 bitki sırası (yükseklik ≥ 0.4 m, LiDAR düzleminde görünür), koridorlarda saksı engelleri, sıraların üstünde kamera yüksekliğinde (~0.4–0.5 m) kırmızı "domates" küreleri ve yeşil yapraklar. Karma dünya (ADR-018, `INTERFACES.md` §4.2): önce primitiflerle çalışan dünya, sonra Blender süsleri (`models/<model>/`, `.obj`). Koridor genişliği robotun çarpışma genişliğine (0.52 m) göre rahat dönebilecek kadar olmalı (≥ 1.0 m önerilir).
 - [ ] Dünya eklentileri: physics, user-commands, scene-broadcaster, sensors (`ogre2`), imu (`INTERFACES.md` §5)
 - [ ] `config/bridge/base.yaml` — `/clock`, `/cmd_vel`, `/odom`, `/tf`, `/joint_states`
 - [ ] `launch/bringup.launch.py` — dünya + robot_state_publisher + spawn + `config/bridge/*.yaml` için ayrı bridge node'ları + RViz; argümanlar `INTERFACES.md` §6

@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.5 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017)
+**Sürüm:** 0.7 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017) · 0.7: renk setleri + `gazebo_mesh_colors`, tekerlek küre çarpışması (§4.1, §6, ADR-019), karma dünya (§4.2, ADR-018)
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -109,14 +109,24 @@ Başlangıç değerleri — S1 `properties.xacro`'da bunları kullanır. Diğer 
 | Eksenler | REP-103: Blender sahnesinde X ileri, Y sol, Z yukarı modellenir. Dışa aktarılan dosyanın RViz2/Gazebo'da doğru yönde açıldığı yön testiyle doğrulanır (aşağıda) |
 | Orijin | Her mesh'in orijini, bağlı olduğu link frame'inin orijininde (örn. tekerlek mesh'i aks merkezinde). İstisna: link orijini parçanın dışındaysa (ADR-017 sonrası `base_link` ↔ şasi) mesh parça merkezinde kalabilir; ofset `visual` `origin` ile `properties.xacro` değerinden verilir |
 | Parçalama | Her link için ayrı mesh dosyası: `chassis`, `wheel` (sol/sağ aynı mesh), `caster`, `camera_mast`, `lidar`, `camera`, `imu` |
-| Dosya yolu | `src/serabot_description/meshes/<link>.<ext>`; kaynak `src/serabot_description/meshes/source/serabot.blend` |
+| Dosya yolu | `src/serabot_description/meshes/<link>.obj` + `.mtl` (RViz2 renk seti, sRGB) ve `meshes/gazebo/<link>.obj` + `.mtl` (Gazebo Jetty renk seti, doğrusal); kaynak `meshes/source/serabot.blend`. İki set her zaman `blender/build_serabot.py` ile birlikte üretilir |
 | URDF referansı | `package://serabot_description/meshes/<link>.<ext>` |
 | Format | **`.obj` + `.mtl`** (aynı klasörde, aynı ad; renkler MTL diffuse). `.glb` kullanılmaz: RViz2 ve Gazebo Jetty glTF eksen dönüşümünü farklı uyguluyor (ADR-015, yön testi). Blender 5.2'de `.dae` yok |
 | OBJ dışa aktarım | S1'in test küpündeki ayarlar (`blender/make_orientation_test.py`): Blender ham eksenleri (Forward/Up dönüşümü yok — dosyada Z yukarı), Apply Modifiers açık, sadece seçili nesne (link başına bir dosya), malzemeler MTL'e yazılır |
 | Yön ve renk testi | ✅ 2026-10-24, Üye A VM (Docker, Lyrical + Jetty 10.5.0): `orientation_cube.obj` RViz2 **ve** Gazebo'da doğru yön ve renkte. `glb_yup` yalnız RViz2'de, `glb_zup` yalnız Gazebo'da doğru |
 | Poligon bütçesi | Robot toplamı ≤ 50k üçgen (VM'de akıcı simülasyon için) |
-| Çarpışma | Mesh kullanılmaz; §4'teki boyutlarla primitif geometri |
+| Çarpışma | Mesh kullanılmaz; §4'teki boyutlarla primitif geometri. İstisna: tekerlek çarpışması küre r = 0.08 m (ADR-019) → robotun çarpışma genişliği **0.52 m** |
 | Dış ölçüler | Mesh'in sınır kutusu §4'teki boyutlara uyar (görsel ile çarpışma modeli örtüşmeli) |
+
+### 4.2 Dünya modelleri (karma, ADR-018)
+
+| Kural | Değer |
+|---|---|
+| Çarpışma ve LiDAR geometrisi | Duvarlar, bitki yatakları, saksılar: SDF primitifleri (kutu/silindir); `collision` her zaman primitif |
+| Görsel süs | Bitkiler, domatesler, sera iskeleti vb. Blender'da, `.obj` + `.mtl` (§4.1 kuralları, Gazebo renk seti); `src/serabot_gazebo/models/<model>/` altında, `model://` ile |
+| Kamera hedefi | Kırmızı domatesler kamera yüksekliğinde (≈ 0.40–0.50 m) görünür olmalı; renk HSV ile ayrılabilir saf kırmızı tonda |
+| Poligon bütçesi | Tüm dünya görselleri ≤ 150k üçgen (VM yazılımsal render) |
+| Sıra | Önce sadece primitiflerle çalışan dünya; Blender süsleri sonra ve zaman kalırsa |
 
 ## 5. Gazebo eklentileri
 
@@ -142,7 +152,7 @@ DiffDrive parametreleri: `left_joint=left_wheel_joint`, `right_joint=right_wheel
 | `sensors` | `true` | Yardımcı sensör node'larını (`color_detector`, `imu_monitor`) başlat |
 | `x`, `y`, `yaw` | `0.0` | Spawn pozisyonu (S2 dünyaya göre güncelleyecek) |
 
-Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu` — varsayılan `true`.
+Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu` — varsayılan `true`; `gazebo_mesh_colors` — varsayılan `false` (RViz renk seti). `robot_state_publisher`'a giden URDF varsayılanla, Gazebo'ya spawn edilen URDF `gazebo_mesh_colors:=true` ile üretilir (spawn `robot_description` topic'inden değil, ayrı xacro çıktısından).
 
 ## 7. Parametreler (davranış — varsayılanlar `config/behavior.yaml`)
 

@@ -2,7 +2,7 @@
 
 Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `docs/modules/<modül>.md` içine yazar.
 
-**Son güncelleme:** 2026-10-24
+**Son güncelleme:** 2026-10-26
 
 ## Takvim
 
@@ -23,7 +23,7 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | Modül | Sorumlu | Durum | Not |
 |---|---|---|---|
 | S0 Yönetici / docs | Üye A | Devam | Docs v0.1 hazır |
-| S1 Robot modeli | Üye A | Devam | Primitif URDF + konsept B (Saksı) Blender modeli hazır; Linux doğrulaması 1–5 geçti. Sıradaki: ADR-017 (`base_link` aks ortasına) + `.obj` mesh'lerin URDF'e bağlanması |
+| S1 Robot modeli | Üye A | Büyük ölçüde tamam | ADR-017 uygulandı, konsept B `.obj` mesh'leri bağlı, iki renk seti, tekerlek küre çarpışması; VM'de build, `check_urdf`, yerinde dönüş testi geçti (`708aa3d`, `fb8286b`). Kalan: sensörler eklenince kendi gövdesini görme kontrolü |
 | S2 Simülasyon | Üye A | Başlamadı | |
 | S3a LiDAR | Üye A | Başlamadı | |
 | S3b Kamera | Üye B | Başlamadı | Üye B: Ubuntu VM |
@@ -40,6 +40,8 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 - 2026-10-24 — S1: primitif robot modeli, `display.launch.py`, konsept B (Saksı) Blender modeli (15.6k üçgen), yön/renk test küpü (`9ba0913`, `e343019`; CI yeşil). S0 incelemesi: TF ağacı, tekerlek eksenleri ve DiffDrive parametreleri sözleşmeyle uyumlu. S1 açık isteği uygulandı: `.gitignore`'a `*.blend1`.
 - 2026-10-24 — **Linux test ortamı hazır (ADR-016):** Üye A'nın VM'inde Docker ile Lyrical + Gazebo Jetty 10.5.0; Claude SSH ile erişiyor (`docs/DEV_ENVIRONMENT.md`). `colcon build` + `colcon test` geçti.
 - 2026-10-24 — **S1 Linux doğrulaması (S0 tarafından, VM):** adım 1 `check_urdf` ✅; adım 2 RViz model görüntüsü ✅; adım 3 SDF + sürtünme (caster `mu`=0, tekerlek 1) ✅; adım 4 Gazebo'da spawn, ileri sürüş ve dönüş, `/odom`, `/tf`, `/joint_states` ✅ (yerinde dönüşte gövde ~0.12 m yarıçaplı yay çiziyor — odometri ofseti, aşağıdaki açık konu #7); adım 5 mesh yön/renk testi ✅ → format `.obj` + `.mtl` (ADR-015 sonucu, INTERFACES v0.5).
+- 2026-10-24 — S1: ADR-017 uygulandı, `.obj` mesh'ler URDF'e bağlandı, Gazebo/RViz renk setleri, tekerlek küre çarpışması; VM'de doğrulandı (`708aa3d`, `fb8286b`). S0: S1 açık istekleri INTERFACES v0.7'ye işlendi (ADR-019).
+- 2026-10-26 — Karma sera dünyası kararı (ADR-018, INTERFACES §4.2).
 
 ## Açık konular / riskler
 
@@ -51,4 +53,4 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | 4 | Commit'lerdeki Claude "Co-Authored-By" satırının ders yapay zekâ politikasına uygunluğu | Üye A | F1 |
 | 5 | Repo lisansı | Üye A | F0 |
 | 6 | ~~Mesh yön/renk testi~~ — tamam, `.obj` + `.mtl` (ADR-015) | — | ✅ |
-| 7 | Odometri ofseti → karar: `base_link` aks ortasına (ADR-017, INTERFACES v0.6). S1 uygulayacak | S1 | Sensörlerden önce |
+| 7 | ~~Odometri ofseti~~ — ADR-017 uygulandı (S1) | — | ✅ |
