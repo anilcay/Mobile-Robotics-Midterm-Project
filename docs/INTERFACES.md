@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.7 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017) · 0.7: renk setleri + `gazebo_mesh_colors`, tekerlek küre çarpışması (§4.1, §6, ADR-019), karma dünya (§4.2, ADR-018)
+**Sürüm:** 0.8 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017) · 0.7: renk setleri + `gazebo_mesh_colors`, tekerlek küre çarpışması (§4.1, §6, ADR-019), karma dünya (§4.2, ADR-018) · 0.8: spawn varsayılanı (−4.0, 0.875, 0) ve dünya yerleşimi (§4.2, §6)
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -127,6 +127,17 @@ Başlangıç değerleri — S1 `properties.xacro`'da bunları kullanır. Diğer 
 | Kamera hedefi | Kırmızı domatesler kamera yüksekliğinde (≈ 0.40–0.50 m) görünür olmalı; renk HSV ile ayrılabilir saf kırmızı tonda |
 | Poligon bütçesi | Tüm dünya görselleri ≤ 150k üçgen (VM yazılımsal render) |
 | Sıra | Önce sadece primitiflerle çalışan dünya; Blender süsleri sonra ve zaman kalırsa |
+| Dünyalar | `greenhouse.sdf` (süslü, varsayılan), `greenhouse_primitive.sdf` (sade yedek); ikisi de `tools/generate_greenhouse.py` ile üretilir, elle düzenlenmez |
+
+**Dünya yerleşimi** (`greenhouse`, orijin sera merkezi; kaynak `docs/modules/simulation.md`):
+
+| Öğe | Değer |
+|---|---|
+| İç alan | x −5…5, y −3…3 m; duvarlar 0.1 m kalın, 1.0 m yüksek |
+| Bitki yatakları | 6.0 × 0.5 × 0.40 m, merkez y = −1.75 / 0 / +1.75, x −3…3 |
+| Koridorlar | Yataklar arası merkez y = ±0.875 (1.25 m geniş); duvar kenarı koridorları 1.0 m; dönüş alanları x −5…−3 ve 3…5 |
+| Saksılar (r 0.15, h 0.35) | (−0.5, 1.30), (1.0, −0.45), (−1.6, −1.30), (4.2, −1.20), (−4.2, −1.80) |
+| Domatesler | Saf kırmızı, z ≈ 0.45–0.53 m, yatakların iki kenarında |
 
 ## 5. Gazebo eklentileri
 
@@ -150,7 +161,7 @@ DiffDrive parametreleri: `left_joint=left_wheel_joint`, `right_joint=right_wheel
 | `rviz` | `true` | RViz2'yi aç |
 | `behavior` | `false` | Davranış node'unu başlat |
 | `sensors` | `true` | Yardımcı sensör node'larını (`color_detector`, `imu_monitor`) başlat |
-| `x`, `y`, `yaw` | `0.0` | Spawn pozisyonu (S2 dünyaya göre güncelleyecek) |
+| `x`, `y`, `yaw` | `-4.0`, `0.875`, `0.0` | Spawn pozisyonu: batı dönüş alanı, y = +0.875 koridorunun girişi, +x yönüne bakar |
 
 Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu` — varsayılan `true`; `gazebo_mesh_colors` — varsayılan `false` (RViz renk seti). `robot_state_publisher`'a giden URDF varsayılanla, Gazebo'ya spawn edilen URDF `gazebo_mesh_colors:=true` ile üretilir (spawn `robot_description` topic'inden değil, ayrı xacro çıktısından).
 
