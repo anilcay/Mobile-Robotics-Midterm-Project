@@ -1,11 +1,93 @@
 <?xml version="1.0"?>
 <!--
-  PLACEHOLDER created by S0 so the top-level xacro builds.
-  Owner: shared (IMU) - replace the macro body; keep the macro name and parameters
-  (they are part of the contract used by serabot.urdf.xacro).
+  SeraBot IMU (owner: shared; integration by Member A). docs/INTERFACES.md
+  sections 2.4, 3, 4 and 8. imu_link is the turning centre (middle of the wheel
+  axle, imu_x/y/z = 0 from base_link), so turning in place adds no centripetal
+  acceleration. The board sits inside the chassis. Macro name and parameter are
+  part of the contract.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="serabot_imu" params="parent">
 
+  <xacro:include filename="../properties.xacro"/>
+  <xacro:include filename="../materials.xacro"/>
+  <xacro:include filename="../inertial_macros.xacro"/>
+
+  <!-- Board: bounding box of meshes/imu.obj -->
+  <xacro:property name="imu_board_x" value="0.03"/>
+  <xacro:property name="imu_board_y" value="0.025"/>
+  <xacro:property name="imu_board_z" value="0.009"/>
+  <xacro:property name="imu_mass" value="0.01"/>
+
+  <!-- Sensor settings (INTERFACES.md section 2.4). Noise: typical MEMS IMU values -->
+  <xacro:property name="imu_topic" value="imu"/>
+  <xacro:property name="imu_rate" value="100"/>
+  <xacro:property name="imu_gyro_stddev" value="2e-4"/>
+  <xacro:property name="imu_accel_stddev" value="1.7e-2"/>
+
+  <xacro:macro name="serabot_imu_noise" params="stddev">
+    <noise type="gaussian">
+      <mean>0.0</mean>
+      <stddev>${stddev}</stddev>
+    </noise>
   </xacro:macro>
+
+  <xacro:macro name="serabot_imu" params="parent">
+    <joint name="imu_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="imu_link"/>
+      <origin xyz="${imu_x} ${imu_y} ${imu_z}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="imu_link">
+      <xacro:if value="${use_mesh_visuals}">
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <mesh filename="${mesh_dir}/imu.obj"/>
+          </geometry>
+        </visual>
+      </xacro:if>
+      <xacro:unless value="${use_mesh_visuals}">
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="${imu_board_x} ${imu_board_y} ${imu_board_z}"/>
+          </geometry>
+          <xacro:serabot_material name="green"/>
+        </visual>
+      </xacro:unless>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${imu_board_x} ${imu_board_y} ${imu_board_z}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_box mass="${imu_mass}" x="${imu_board_x}" y="${imu_board_y}"
+                          z="${imu_board_z}"/>
+    </link>
+
+    <gazebo reference="imu_link">
+      <sensor name="imu" type="imu">
+        <pose>0 0 0 0 0 0</pose>
+        <topic>${imu_topic}</topic>
+        <gz_frame_id>imu_link</gz_frame_id>
+        <update_rate>${imu_rate}</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <imu>
+          <angular_velocity>
+            <x><xacro:serabot_imu_noise stddev="${imu_gyro_stddev}"/></x>
+            <y><xacro:serabot_imu_noise stddev="${imu_gyro_stddev}"/></y>
+            <z><xacro:serabot_imu_noise stddev="${imu_gyro_stddev}"/></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><xacro:serabot_imu_noise stddev="${imu_accel_stddev}"/></x>
+            <y><xacro:serabot_imu_noise stddev="${imu_accel_stddev}"/></y>
+            <z><xacro:serabot_imu_noise stddev="${imu_accel_stddev}"/></z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
 </robot>
