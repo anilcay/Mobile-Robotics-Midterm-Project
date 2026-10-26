@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="planter_bed">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <geometry><mesh><uri>model://planter_bed/meshes/planter_bed.obj</uri></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

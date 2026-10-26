@@ -1,12 +1,16 @@
-"""Generate worlds/greenhouse.sdf (primitive-only greenhouse world).
+"""Generate the greenhouse worlds.
 
-The layout lives in the constants below so that later Blender decorations
-(docs/INTERFACES.md section 4.2) can be aligned with the collision geometry.
+worlds/greenhouse.sdf            decorated: primitive collisions + Blender meshes
+worlds/greenhouse_primitive.sdf  primitives only (fallback for slow rendering)
+
+The layout lives in the constants below; blender/build_greenhouse.py imports
+them so the decorations line up with the collision geometry (INTERFACES 4.2).
 Run from anywhere:  python src/serabot_gazebo/tools/generate_greenhouse.py
 
 Frame: world origin at the greenhouse centre, x along the plant beds, z up.
 """
 
+import math
 from pathlib import Path
 from typing import List, Tuple
 
@@ -26,12 +30,12 @@ BED_HEIGHT = 0.40
 BED_Y = (-1.75, 0.0, 1.75)
 SOIL_DEPTH = 0.02
 
-# Foliage: visual only, inside the bed footprint, above the LiDAR plane.
+# Foliage (primitive world): visual only, inside the bed footprint.
 FOLIAGE_WIDTH = 0.36
 FOLIAGE_HEIGHT = 0.35
 
-# Tomatoes: visual only, pure red, at camera height (~0.44 m), on both bed
-# edges facing the corridors.
+# Tomatoes (primitive world): visual only, pure red, at camera height (~0.44 m),
+# on both bed edges facing the corridors.
 TOMATO_RADIUS = 0.04
 TOMATO_Z = 0.46
 TOMATO_EDGE_OFFSET = 0.22
@@ -59,7 +63,7 @@ FOLIAGE_RGB = (0.10, 0.45, 0.12)
 TOMATO_RGB = (1.0, 0.0, 0.0)
 POT_RGB = (0.30, 0.34, 0.40)
 
-OUTPUT = Path(__file__).resolve().parent.parent / 'worlds' / 'greenhouse.sdf'
+WORLDS = Path(__file__).resolve().parent.parent / 'worlds'
 
 
 def fmt(*values: float) -> str:
@@ -83,6 +87,12 @@ def box_visual(name: str, pose: Tuple[float, ...], size: Tuple[float, ...],
 def box_collision(name: str, pose: Tuple[float, ...], size: Tuple[float, ...]) -> str:
     return (f'<collision name="{name}"><pose>{fmt(*pose)}</pose>'
             f'<geometry><box><size>{fmt(*size)}</size></box></geometry></collision>')
+
+
+def mesh_visual(name: str, model: str, pose: Tuple[float, ...] = (0, 0, 0, 0, 0, 0)) -> str:
+    """Visual using a Blender mesh from models/<model>/meshes/<model>.obj."""
+    return (f'<visual name="{name}"><pose>{fmt(*pose)}</pose><geometry><mesh>'
+            f'<uri>model://{model}/meshes/{model}.obj</uri></mesh></geometry></visual>')
 
 
 def walls() -> str:
@@ -109,18 +119,24 @@ def walls() -> str:
     </model>'''
 
 
-def bed(index: int, y: float) -> str:
+def bed(index: int, y: float, decorated: bool) -> str:
     size = (BED_LENGTH, BED_WIDTH, BED_HEIGHT)
     centre = (0, 0, BED_HEIGHT / 2, 0, 0, 0)
-    parts = [
-        box_collision('collision', centre, size),
-        box_visual('visual', centre, size, BED_RGB),
-        box_visual('soil', (0, 0, BED_HEIGHT + SOIL_DEPTH / 2, 0, 0, 0),
-                   (BED_LENGTH - 0.04, BED_WIDTH - 0.04, SOIL_DEPTH), SOIL_RGB),
-        box_visual('foliage', (0, 0, BED_HEIGHT + FOLIAGE_HEIGHT / 2, 0, 0, 0),
-                   (BED_LENGTH - 0.1, FOLIAGE_WIDTH, FOLIAGE_HEIGHT), FOLIAGE_RGB),
-    ]
-    parts.extend(tomatoes(y))
+    parts = [box_collision('collision', centre, size)]
+    if decorated:
+        # Middle row turned around so neighbouring rows do not look identical.
+        yaw = math.pi if index % 2 else 0.0
+        parts.append(mesh_visual('planter', 'planter_bed'))
+        parts.append(mesh_visual('plants', 'tomato_row', (0, 0, 0, 0, 0, yaw)))
+    else:
+        parts += [
+            box_visual('visual', centre, size, BED_RGB),
+            box_visual('soil', (0, 0, BED_HEIGHT + SOIL_DEPTH / 2, 0, 0, 0),
+                       (BED_LENGTH - 0.04, BED_WIDTH - 0.04, SOIL_DEPTH), SOIL_RGB),
+            box_visual('foliage', (0, 0, BED_HEIGHT + FOLIAGE_HEIGHT / 2, 0, 0, 0),
+                       (BED_LENGTH - 0.1, FOLIAGE_WIDTH, FOLIAGE_HEIGHT), FOLIAGE_RGB),
+        ]
+        parts.extend(tomatoes())
     body = '\n        '.join(parts)
     return f'''
     <model name="bed_{index}">
@@ -132,11 +148,10 @@ def bed(index: int, y: float) -> str:
     </model>'''
 
 
-def tomatoes(bed_y: float) -> List[str]:
-    """Tomato visuals on the bed edges that face a corridor."""
+def tomatoes() -> List[str]:
+    """Tomato visuals on both bed edges (all edges face a corridor)."""
     out = []
     for side, sign in (('left', 1.0), ('right', -1.0)):
-        # The outer beds' wall-side edges also face a (1.0 m) corridor.
         for ci, cx in enumerate(CLUSTER_X):
             for ti, (dx, dz) in enumerate(CLUSTER_SHAPE):
                 pose = (cx + dx, sign * TOMATO_EDGE_OFFSET, TOMATO_Z + dz, 0, 0, 0)
@@ -147,29 +162,48 @@ def tomatoes(bed_y: float) -> List[str]:
     return out
 
 
-def pot(index: int, x: float, y: float) -> str:
+def pot(index: int, x: float, y: float, decorated: bool) -> str:
     geom = (f'<geometry><cylinder><radius>{fmt(POT_RADIUS)}</radius>'
             f'<length>{fmt(POT_HEIGHT)}</length></cylinder></geometry>')
+    if decorated:
+        visual = mesh_visual('visual', 'plant_pot')
+    else:
+        visual = f'<visual name="visual">{geom}{material(POT_RGB)}</visual>'
     return f'''
     <model name="pot_{index}">
       <static>true</static>
       <pose>{fmt(x, y, POT_HEIGHT / 2)} 0 0 0</pose>
       <link name="link">
         <collision name="collision">{geom}</collision>
-        <visual name="visual">{geom}{material(POT_RGB)}</visual>
+        {visual}
       </link>
     </model>'''
 
 
-def world() -> str:
+def frame() -> str:
+    """Greenhouse frame: visual only, posts hidden inside the wall boxes."""
+    return f'''
+    <model name="greenhouse_frame">
+      <static>true</static>
+      <link name="link">
+        {mesh_visual('visual', 'greenhouse_frame')}
+      </link>
+    </model>'''
+
+
+def world(decorated: bool) -> str:
     models = walls()
-    models += ''.join(bed(i, y) for i, y in enumerate(BED_Y))
-    models += ''.join(pot(i, x, y) for i, (x, y) in enumerate(POTS))
+    models += ''.join(bed(i, y, decorated) for i, y in enumerate(BED_Y))
+    models += ''.join(pot(i, x, y, decorated) for i, (x, y) in enumerate(POTS))
+    if decorated:
+        models += frame()
+    kind = 'Blender visuals on primitive collisions' if decorated else 'primitives only'
+    source = 'greenhouse.sdf' if decorated else 'greenhouse_primitive.sdf'
     floor = material(FLOOR_RGB)
     return f'''<?xml version="1.0"?>
 <!--
-  SeraBot greenhouse world (owner: S2). GENERATED by tools/generate_greenhouse.py,
-  edit the generator, not this file.
+  SeraBot greenhouse world, {kind} (owner: S2).
+  {source} is GENERATED by tools/generate_greenhouse.py; edit the generator.
   Interior 10 x 6 m, three plant beds along x, pots as corridor obstacles,
   pure red tomatoes at camera height. Collision geometry is primitive (ADR-018).
 -->
@@ -222,8 +256,10 @@ def world() -> str:
 
 
 def main() -> None:
-    OUTPUT.write_text(world(), encoding='utf-8', newline='\n')
-    print(f'wrote {OUTPUT}')
+    for name, decorated in (('greenhouse.sdf', True), ('greenhouse_primitive.sdf', False)):
+        path = WORLDS / name
+        path.write_text(world(decorated), encoding='utf-8', newline='\n')
+        print(f'wrote {path}')
 
 
 if __name__ == '__main__':
