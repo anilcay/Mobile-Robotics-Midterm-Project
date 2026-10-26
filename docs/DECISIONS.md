@@ -113,3 +113,8 @@ Yeni karar en alta eklenir. Format: bağlam → karar → sonuç. Bir karar değ
 - **Bağlam:** S1, VM testlerinde silindir tekerlek çarpışmasının odometride yaw sapmasına yol açtığını ölçtü; ayrıca aynı `.mtl` renkleri RViz2 (sRGB) ve Gazebo (doğrusal) arasında farklı göründü.
 - **Karar:** Tekerlek `collision` geometrisi küre r = 0.08 m (görsel değişmez); robotun çarpışma genişliği 0.52 m olur. Mesh'ler iki renk setiyle üretilir (`meshes/` RViz, `meshes/gazebo/` Gazebo); xacro argümanı `gazebo_mesh_colors` seçer, Gazebo'ya spawn edilen URDF `true` ile üretilir.
 - **Sonuç:** S2 spawn'ı ayrı bir xacro çıktısından yapar (`INTERFACES.md` §6). S4 dar geçit/engel eşiklerinde 0.52 m genişliği hesaba katar.
+
+## ADR-020 — Davranış parametreleri, `headless` argümanı, ortak klasörler
+- **Tarih:** 2026-10-27 · **Durum:** Kabul (S3/S4 istekleri)
+- **Karar:** (1) S4'ün eklediği davranış parametreleri ve `WAIT` durumu sözleşmeye girer (`INTERFACES.md` §2.5, §7); karar kuralının ayrıntısı `docs/modules/behavior.md`. (2) `bringup.launch.py`'ye `headless` argümanı (varsayılan `false`) eklenir; S2 uygular. VM'de Gazebo GUI'siz çalışmak RTF'yi ≈ 0.38'den ≈ 0.48'e çıkarır (S3 ölçümü); canlı demoda RViz tek görsel olabilir. (3) Ortak klasörler: `scripts/sim/` (test/ölçüm betikleri) ve `docs/report/<modül>/` (rapor görselleri); her oturum kendi dosyasını ekler. (4) Repo köküne ament_flake8 ayarlarını yansıtan `.flake8`.
+- **Sonuç:** Test betikleri repoya girer, tekrar üretilebilir. Demo makinesi seçimi (VM mi, Üye B'nin makinesi mi) RTF'ye göre yapılmalı.

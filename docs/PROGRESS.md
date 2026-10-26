@@ -2,7 +2,7 @@
 
 Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `docs/modules/<modül>.md` içine yazar.
 
-**Son güncelleme:** 2026-10-26
+**Son güncelleme:** 2026-10-27
 
 ## Takvim
 
@@ -25,10 +25,10 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 | S0 Yönetici / docs | Üye A | Devam | Docs v0.1 hazır |
 | S1 Robot modeli | Üye A | Büyük ölçüde tamam | ADR-017 uygulandı, konsept B `.obj` mesh'leri bağlı, iki renk seti, tekerlek küre çarpışması; VM'de build, `check_urdf`, yerinde dönüş testi geçti (`708aa3d`, `fb8286b`). Kalan: sensörler eklenince kendi gövdesini görme kontrolü |
 | S2 Simülasyon | Üye A | Büyük ölçüde tamam | Primitif + süslü sera dünyası (78.7k üçgen), `base.yaml`, tek launch; VM'de tek komutla açılış, sürüş, RViz doğrulandı (`07c19ff`, `df593b5`). Kalan: launch spawn varsayılanını INTERFACES v0.8'e çekmek; sensörlerle RTF ölçümü |
-| S3a LiDAR | Üye A | Başlamadı | |
+| S3a LiDAR | Üye A | Tamam (Linux'ta doğrulandı) | `/scan` 10 Hz, mesafeler dünya yerleşimiyle ort. −1 mm hata, öz-görme yok (`e1eaad1`). Kalan: ekran görüntüsünü `docs/report/sensors/`'a koymak |
 | S3b Kamera | Üye B | Başlamadı | Üye B: Ubuntu VM |
-| S3c IMU | Ortak | Başlamadı | |
-| S4 Davranış | Üye A | Başlamadı | |
+| S3c IMU | Ortak | Entegrasyon tamam (Üye A); görselleştirme bekliyor (Üye B) | `/imu` 100 Hz, durağan 9.80 m/s², dönüşte ω doğru (`39aa75e`). Kalan: `imu_monitor` + rqt_plot (Üye B) |
+| S4 Davranış | Üye A | Çekirdek tamam (Linux'ta doğrulandı) | CRUISE/AVOID/EMERGENCY + WAIT; 26 test; Gazebo'da 180 s, 37 m, çarpışmasız (run3) (`82f5cdc`). Kalan: tekrar koşuları, kamera katmanı testi, test betiklerini `scripts/sim/`'e almak |
 
 ## Tamamlananlar
 
@@ -43,6 +43,7 @@ Bu dosyayı sadece S0 (yönetici oturum) günceller; modüller kendi durumunu `d
 - 2026-10-24 — S1: ADR-017 uygulandı, `.obj` mesh'ler URDF'e bağlandı, Gazebo/RViz renk setleri, tekerlek küre çarpışması; VM'de doğrulandı (`708aa3d`, `fb8286b`). S0: S1 açık istekleri INTERFACES v0.7'ye işlendi (ADR-019).
 - 2026-10-26 — Karma sera dünyası kararı (ADR-018, INTERFACES §4.2).
 - 2026-10-26 — **M1 (robot + dünya + tek launch) Linux'ta sağlandı.** S2: sera dünyası (primitif çarpışma + Blender süsleri), `base.yaml`, `bringup.launch.py`; VM'de doğrulandı. Gerçek zaman oranı ≈ 0.39 (GUI + RViz, sensörsüz, 30 s ortalama) — süsler etkilemiyor, darboğaz yazılımsal render. S0: S2 istekleri uygulandı (spawn varsayılanı INTERFACES v0.8, `python3-yaml`), konteynere `--init` (öksüz süreç birikmesi).
+- 2026-10-27 — S3: LiDAR + IMU entegrasyonu VM'de doğrulandı (`e1eaad1`, `39aa75e`). S4: davranış node'u, 26 test, Gazebo'da 3 dk çarpışmasız (`82f5cdc`). S2: spawn varsayılanı (`e908ad5`). **M3 çekirdeği sağlandı; M2 2/3 (kamera bekliyor).** S0: ADR-020 (davranış parametreleri, `headless`, ortak klasörler), `.flake8`, REQUIREMENTS durumları.
 
 ## Açık konular / riskler
 

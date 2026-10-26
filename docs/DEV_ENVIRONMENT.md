@@ -54,3 +54,8 @@ ssh serabot-vm 'cd serabot_ws && docker/run.sh exec "colcon build && colcon test
 - Konteyner içinde `pkill -f <desen>` kullanırken desen kendi komut satırınızla eşleşmesin (örn. `pkill -f "^rviz2"`).
 - Uzun işler (imaj derleme vb.) SSH oturumuna bağlı çalıştırılmamalı: `setsid nohup ... &`.
 - VM ekranı kilitlenirse GUI görüntüsü alınamaz; kilidi kullanıcı açar. Otomatik kilit/ekran karartma kapalı olmalı (VM ayarı, kullanıcı yapar).
+- Lyrical'da `ros2 bag record` topic'leri `--topics` ile ister (S4).
+- Arka planda (betikten) başlatılan `ros2 launch` / `ros2 bag` SIGINT'i yok sayılmış olarak devralır → `kill -INT` etkisiz, bag `metadata.yaml`'sız kalır. Çözüm: SIGINT'i varsayılana çevirip exec etmek; öksüz süreçleri `pkill -TERM -f "^/opt/ros/lyrical/(lib/robot_state_publisher|lib/ros_gz_bridge|opt/gz_sim_vendor)"` ile kapatmak (S2, S4).
+- Gazebo sunucusu nadiren hiç açılmıyor (`ros_gz_sim create` sürekli "Requesting list of world names"; bir kez 18 dk). Test betikleri ilk pozu ~120 s bekleyip yeniden başlatmalı (S4).
+- Gerçek zaman oranı (S3 ölçümü, sensörlerle): GUI + RViz ≈ 0.38; GUI'siz + RViz ≈ 0.48; ikisi de kapalı ≈ 0.90. Sensörlerin etkisi ölçülemeyecek kadar küçük; darboğaz yazılımsal render'lı GUI'ler.
+- Simülasyon test/ölçüm betikleri: `scripts/sim/` (bkz. CLAUDE.md sahiplik notu).

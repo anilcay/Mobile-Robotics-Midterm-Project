@@ -1,0 +1,7 @@
+# Mirrors the ament_flake8 defaults used by `colcon test`, so a local
+# `python -m flake8 src` reports the same issues on Windows.
+[flake8]
+extend-ignore = B902,C816,D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D404,I202
+import-order-style = google
+max-line-length = 99
+exclude = build,install,log
