@@ -1,0 +1,34 @@
+behavior_node started: 10 Hz, use_camera=False, turn radius 0.376 m
+WAIT -> CRUISE: scan received
+CRUISE -> AVOID: front 0.55 m < 0.55 m; turning right
+AVOID -> CRUISE: turned 176 deg (imu), front 0.98 m
+CRUISE -> AVOID: front 0.55 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 71 deg (imu), front 0.83 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 71 deg (imu), front 0.87 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning right
+AVOID -> CRUISE: turned 158 deg (imu), front 1.15 m
+CRUISE -> AVOID: front 0.55 m < 0.55 m; turning right
+AVOID -> CRUISE: turned 62 deg (imu), front 1.29 m
+CRUISE -> AVOID: front 0.55 m < 0.55 m; turning right
+AVOID -> CRUISE: turned 63 deg (imu), front 0.91 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning right
+AVOID -> CRUISE: turned 172 deg (imu), front 1.91 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 61 deg (imu), front 1.98 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 100 deg (imu), front 0.96 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 60 deg (imu), front 0.99 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 169 deg (imu), front 1.96 m
+CRUISE -> AVOID: front 0.55 m < 0.55 m; turning right
+AVOID -> CRUISE: turned 63 deg (imu), front 1.90 m
+CRUISE -> AVOID: front 0.54 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 61 deg (imu), front 1.00 m
+CRUISE -> AVOID: front 0.53 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 119 deg (imu), front 1.22 m
+CRUISE -> AVOID: front 0.53 m < 0.55 m; turning right
+AVOID -> CRUISE: turned 63 deg (imu), front 1.53 m
+CRUISE -> AVOID: front 0.45 m < 0.55 m; turning left
+AVOID -> CRUISE: turned 146 deg (imu), front 1.10 m

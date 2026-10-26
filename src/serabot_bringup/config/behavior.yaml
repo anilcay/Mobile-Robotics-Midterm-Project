@@ -1,0 +1,52 @@
+# SeraBot behavior node defaults (owner: S4). Contract values: docs/INTERFACES.md section 7.
+# Distances are lidar ranges [m] unless noted; times are simulation seconds.
+# Keep a decimal point on float values: ROS 2 rejects an integer for a double parameter.
+behavior_node:
+  ros__parameters:
+    use_sim_time: true
+    control_rate: 10.0           # Hz
+
+    # --- contract (INTERFACES.md section 7) ---
+    forward_speed: 0.25          # m/s
+    turn_speed: 0.8              # rad/s, in-place turn
+    front_sector_deg: 30.0       # +- half angle of the front sector
+    obstacle_distance: 0.55      # CRUISE -> AVOID
+    clear_distance: 0.8          # AVOID -> CRUISE needs at least this much in front
+    emergency_distance: 0.3      # -> EMERGENCY (back up)
+    turn_angle_deg: 60.0         # minimum turn per AVOID
+    use_camera: false            # enables TRACK / INSPECT
+    inspect_area: 0.08           # target image area ratio -> INSPECT
+    inspect_duration: 3.0        # s
+
+    # --- scan sectors ---
+    side_sector_deg: 100.0       # side sectors span (front_sector_deg, side_sector_deg]
+
+    # --- body geometry relative to base_link [m] (INTERFACES.md section 4) ---
+    lidar_offset_x: 0.22
+    body_front_x: 0.345
+    body_rear_x: -0.105
+    chassis_half_width: 0.15
+    body_half_width: 0.26        # wheel collision spheres, 0.52 m total width
+    side_margin: 0.05            # extra width of the corridor checked ahead
+    rotate_margin: 0.02          # required clearance around the in-place turn circle
+    rotate_sweep_deg: 90.0       # turn arc checked for clearance
+
+    # --- emergency back-up ---
+    backup_speed: 0.1            # m/s (driven backwards)
+    backup_duration: 1.5         # s
+    rear_clear_distance: 0.15    # m behind the chassis needed to back up
+
+    # --- input timeouts [s] ---
+    scan_timeout: 0.5            # older scan -> WAIT (stop)
+    imu_timeout: 0.3             # older IMU -> time-based turn estimate
+    target_timeout: 0.5          # INTERFACES.md section 2.5
+
+    # --- camera layer ---
+    track_gain: 0.8              # rad/s per unit offset
+    track_speed: 0.12            # m/s
+    target_cooldown: 8.0         # s targets are ignored after an inspection
+
+    # --- corridor centering while cruising (0 disables) ---
+    centering_gain: 0.5          # rad/s per m of (left_min - right_min)
+    centering_range: 1.0         # side distances are capped at this value
+    max_centering: 0.3           # rad/s
