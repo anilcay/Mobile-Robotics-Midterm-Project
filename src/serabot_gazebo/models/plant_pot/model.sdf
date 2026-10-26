@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="plant_pot">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <geometry><mesh><uri>model://plant_pot/meshes/plant_pot.obj</uri></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
