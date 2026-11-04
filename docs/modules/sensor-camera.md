@@ -2,7 +2,7 @@
 
 - **Sorumlu:** Üye B (Enes Çelik) · **Faz:** F2 (29 Eki–1 Kas) · **Durum:** Tamam (Linux'ta doğrulandı, 2026-11-04) — commit bekliyor (Üye B'nin hesabından)
 - **Önemli:** Bu modül **Üye B'nin kendi GitHub hesabından** commit'lenir (ders şartı). Üye A'nın oturumları bu dosyaları yazmaz; sadece inceler ve öneri verir.
-- **Sahip olunan yollar:** `src/serabot_description/urdf/sensors/camera.xacro`, `src/serabot_bringup/config/bridge/camera.yaml`, `src/serabot_sensors/serabot_sensors/color_detector.py`, `color_detection.py` (saf işleme), `test/test_color_detection.py`; ortak (kamera + IMU, Üye B yazdı): `serabot_sensors/spin.py`, `test/conftest.py`; ölçüm: `scripts/sim/camera_check.py`, rapor: `docs/report/sensors/camera_*`
+- **Sahip olunan yollar:** `src/serabot_description/urdf/sensors/camera.xacro`, `src/serabot_bringup/config/bridge/camera.yaml`, `src/serabot_sensors/serabot_sensors/color_detector.py`, `color_detection.py` (saf işleme), `test/test_color_detection.py`; ortak (kamera + IMU, Üye B yazdı): `serabot_sensors/spin.py`, `test/conftest.py`; ölçüm: `scripts/sim/camera_check.py`, `camera_track_record.py`, `camera_track_plot.py`; rapor: `docs/report/sensors/camera_*`
 - **Bağımlı olduğu:** S1 (`camera_mast_link`), S2 (sensors sistemi, dünyadaki kırmızı ürünler), `INTERFACES.md` §2.3, §2.5, §4
 - **Ona bağımlı olanlar:** S4 (opsiyonel TRACK/INSPECT katmanı)
 
@@ -75,6 +75,15 @@ Ortam: Üye B dizüstü, **WSL2 Ubuntu 26.04 + ROS 2 Lyrical + Gazebo Jetty 10.5
 - Gerçek zaman oranı: kamera ile GUI + RViz ≈ **0.40–0.66** (kamerasız ≈ 0.85; kamera render'ı). Üye A VM'inde ölçülmedi.
 - Simülasyon 15 dakikadan uzun çökmeden çalıştı (2026-11-04). Önceki iki Gazebo `Segmentation fault` (2026-11-02) muhtemelen GUI penceresi kapatılırken; tekrar görülürse not edilecek.
 
+**Kamera katmanı ile davranış (TRACK / INSPECT), 2026-11-04** — S4'ün `behavior_node`'u, dosyalarına dokunmadan sadece çalışma anında `-p use_camera:=true` ile; diğer parametreler `behavior.yaml` varsayılanı. Varsayılan spawn (−4.0, 0.875, 0), `greenhouse.sdf`, GUI + RViz.
+
+- **run2 (120 s sim):** **5 inceleme** (CRUISE → TRACK → INSPECT → AVOID → CRUISE), 0 EMERGENCY; adım sayısı (10 Hz) CRUISE 646, AVOID 185, TRACK 187, INSPECT 150. run1 (90 s, ayrı launch) geçiş zamanları ve pozları run2'nin ilk 90 s'siyle neredeyse aynı (±0.1 s, ±2 cm) → tekrarlanabilir.
+- İlk döngü: spawn'da sağdaki salkım (offset **+0.91**, alan 0.0060) → `CRUISE -> TRACK: target seen` → robot sağa dönerek 0.12 m/s ilerliyor, offset **+0.05**'e iniyor (hedef görüntünün ortasında) → `TRACK -> INSPECT: bed reached, front 0.54 m` → 3 s dur → `INSPECT -> AVOID: inspection done` → 62° dönüş (IMU) → CRUISE.
+- INSPECT'i her seferinde "yatağa varıldı" (`front_min < obstacle_distance`) tetikledi; alan en çok **%1.5** oldu (eşik `inspect_area` %8 → S4'ün açık sorunu doğrulandı).
+- Görseller: `camera_track_map.png` (yörünge, duruma göre renkli; numaralı noktalar INSPECT), `camera_track_track_1.png` (TRACK girişi, hedef sağda), `camera_track_inspect_{1,2}.png` (INSPECT, hedef ortada); veriler `camera_track_states.csv`, `camera_track_path.csv`.
+- **Gözlem:** kamera açıkken robot batı dönüş alanından (x −4.4…−3.4) çıkmıyor: yatak uçlarındaki salkımlar hep görüş alanında, `target_cooldown` (8 s) bitince yeni bir hedefe yöneliyor; koridorlara girmiyor (Açık istek 6).
+- Tekrarlamak: `scripts/sim/camera_track_record.py` başındaki komutlar; grafik `python3 scripts/sim/camera_track_plot.py OUT_DIR OUT_DIR/map.png`.
+
 **Tekrarlamak için:**
 ```bash
 ros2 launch serabot_bringup bringup.launch.py
@@ -89,9 +98,10 @@ ros2 topic echo /camera/target                                     # point.x = o
 2. **`color_detector` parametre dosyası (CLAUDE.md §5):** eşiklerin varsayılanları şu an `ColorParams` dataclass'ında (node bunlardan parametre tanımlıyor; launch sadece `use_sim_time` veriyor). Kurala tam uyum için `serabot_bringup/config/color_detector.yaml` (değerler yukarıdaki tabloda) ve `bringup.launch.py` `_helper_nodes`'un bunu `color_detector`'a vermesi (S2). Davranışı değiştirmez.
 3. **DEV_ENVIRONMENT.md'ye yeni ortam:** WSL2 + Ubuntu 26.04 + doğrudan apt (Docker'sız). Gerekli değişkenler: `GALLIUM_DRIVER=d3d12`, `MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA` (yoksa `llvmpipe`), `QT_QPA_PLATFORM=xcb` (yoksa RViz "Invalid parentWindowHandle" ile çöküyor). Gazebo donmuş görünürse `/stats` `paused: true` olabilir (GUI'den ▶).
 4. **S4'e öneri (`/clock` CPU yükü):** `behavior_node` de Python + `use_sim_time`; aynı ≈ %55 CPU'luk `/clock` yükü onda da var. `serabot_sensors/spin.py`'deki `EventsExecutor` yaklaşımı ( `spin_once` döngüsü yerine) değerlendirilebilir.
-5. **PROGRESS / REQUIREMENTS:** R7–R9 kamera ✅ (Linux'ta doğrulandı), açık konu #3'ün camera_info kısmı kapandı.
+5. **PROGRESS / REQUIREMENTS:** R7–R9 kamera ✅ (Linux'ta doğrulandı), açık konu #3'ün camera_info kısmı kapandı. S4 tamamlanma kriteri "`use_camera:=true` ile kırmızı ürüne yönelip duruyor" ✅ (yukarıdaki run1/run2).
+6. **S4'e (davranış, karar onların):** kamera katmanı çalışıyor ama robotu dönüş alanında tutuyor (yukarıdaki gözlem). Seçenekler: `target_cooldown`'u uzatmak (örn. 20–30 s), INSPECT sonrası AVOID yerine düz CRUISE'a dönmek, ya da demo için iki mod göstermek (`use_camera:=false` devriye, `true` denetim). Ayrıca `behavior:=true` launch'ında `use_camera`'yı açacak bir yol (launch argümanı veya `behavior.yaml`) demo için gerekli; şu an sadece `ros2 run ... -p use_camera:=true` ile açılabiliyor.
 
 ## Açık sorunlar
 
-- `inspect_area` (S4) 0.08: ölçülen en büyük salkım spawn'da **%0.60**; S4'ün notu doğrulandı — alan eşiği pratikte tetiklenmez, INSPECT'i "yatağa varmak" tetikler. Yaklaşırken alan ölçümü TRACK testinde yapılacak.
-- En büyük blob seçimi: iki yanda da salkım varken hedef sağ/sol arasında atlayabilir (en büyük değişince). TRACK'te titreme görülürse "önceki hedefe en yakın blob" seçimi eklenebilir.
+- `inspect_area` (S4) 0.08: TRACK testinde alan en çok **%1.5** → alan eşiği pratikte tetiklenmiyor, INSPECT'i "yatağa varmak" tetikliyor (çalışıyor; eşik S4'ün kararı).
+- En büyük blob seçimi: iki yanda da salkım varken hedef sağ/sol arasında atlayabilir. TRACK testinde titreme görülmedi (TRACK süreleri 1.6–5 s, offset düzgün 0'a iniyor); görülürse "önceki hedefe en yakın blob" eklenebilir.
