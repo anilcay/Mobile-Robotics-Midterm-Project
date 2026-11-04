@@ -1,11 +1,110 @@
 <?xml version="1.0"?>
 <!--
-  PLACEHOLDER created by S0 so the top-level xacro builds.
-  Owner: Member B (camera) - replace the macro body; keep the macro name and parameters
-  (they are part of the contract used by serabot.urdf.xacro).
+  SeraBot RGB camera (owner: Member B). docs/INTERFACES.md sections 2.3, 3, 4 and 8.
+  camera_link sits on top of the mast (camera_z above camera_mast_link, about 0.44 m
+  above the ground, pitch 0), at the height of the ripe tomatoes on the plant beds.
+  Its axes follow the robot (x forward, z up), which is also the Gazebo camera
+  convention. camera_optical_link is the ROS optical frame (z forward, x right,
+  y down, REP-103) and is the frame_id of the image messages.
+  Macro name and parameter are part of the contract.
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="serabot_camera" params="parent">
 
+  <xacro:include filename="../properties.xacro"/>
+  <xacro:include filename="../materials.xacro"/>
+  <xacro:include filename="../inertial_macros.xacro"/>
+
+  <!-- Housing: bounding box of meshes/camera.obj (x -0.038 .. +0.040, lens at +x) -->
+  <xacro:property name="camera_body_x" value="0.078"/>
+  <xacro:property name="camera_body_y" value="0.054"/>
+  <xacro:property name="camera_body_z" value="0.056"/>
+  <xacro:property name="camera_body_offset_x" value="0.001"/>
+  <xacro:property name="camera_mass" value="0.05"/>
+
+  <!-- Sensor settings (contract, INTERFACES.md section 2.3) -->
+  <xacro:property name="camera_topic" value="camera/image_raw"/>
+  <xacro:property name="camera_info_topic" value="camera/camera_info"/>
+  <xacro:property name="camera_rate" value="15"/>
+  <xacro:property name="camera_width" value="640"/>
+  <xacro:property name="camera_height" value="480"/>
+  <xacro:property name="camera_hfov" value="1.047"/>
+  <!-- The near plane is just past the lens (0.04 m) so the housing is not rendered -->
+  <xacro:property name="camera_clip_near" value="0.05"/>
+  <xacro:property name="camera_clip_far" value="15.0"/>
+  <xacro:property name="camera_noise_stddev" value="0.007"/>
+
+  <xacro:macro name="serabot_camera" params="parent">
+    <joint name="camera_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="camera_link"/>
+      <origin xyz="0 0 ${camera_z}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="camera_link">
+      <xacro:if value="${use_mesh_visuals}">
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <mesh filename="${mesh_dir}/camera.obj"/>
+          </geometry>
+        </visual>
+      </xacro:if>
+      <xacro:unless value="${use_mesh_visuals}">
+        <visual>
+          <origin xyz="${camera_body_offset_x} 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="${camera_body_x} ${camera_body_y} ${camera_body_z}"/>
+          </geometry>
+          <xacro:serabot_material name="dark"/>
+        </visual>
+      </xacro:unless>
+      <collision>
+        <origin xyz="${camera_body_offset_x} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${camera_body_x} ${camera_body_y} ${camera_body_z}"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_box mass="${camera_mass}" x="${camera_body_x}" y="${camera_body_y}"
+                          z="${camera_body_z}" xyz="${camera_body_offset_x} 0 0"/>
+    </link>
+
+    <!-- Optical frame: a pure coordinate frame (no geometry, no mass), rotated so that
+         z looks forward and x points right in the image -->
+    <joint name="camera_optical_joint" type="fixed">
+      <parent link="camera_link"/>
+      <child link="camera_optical_link"/>
+      <origin xyz="0 0 0" rpy="${-pi / 2} 0 ${-pi / 2}"/>
+    </joint>
+    <link name="camera_optical_link"/>
+
+    <gazebo reference="camera_link">
+      <sensor name="camera" type="camera">
+        <pose>0 0 0 0 0 0</pose>
+        <topic>${camera_topic}</topic>
+        <gz_frame_id>camera_optical_link</gz_frame_id>
+        <update_rate>${camera_rate}</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <camera name="camera">
+          <camera_info_topic>${camera_info_topic}</camera_info_topic>
+          <horizontal_fov>${camera_hfov}</horizontal_fov>
+          <image>
+            <width>${camera_width}</width>
+            <height>${camera_height}</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>${camera_clip_near}</near>
+            <far>${camera_clip_far}</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>${camera_noise_stddev}</stddev>
+          </noise>
+        </camera>
+      </sensor>
+    </gazebo>
   </xacro:macro>
+
 </robot>
