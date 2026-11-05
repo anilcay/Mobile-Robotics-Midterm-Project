@@ -1,0 +1,13 @@
+# SeraBot red produce detector (owner: Member B). Same values as ColorParams in
+# serabot_sensors/color_detection.py; thresholds were measured in the greenhouse
+# world (docs/modules/sensor-camera.md). OpenCV HSV ranges: H 0..179, S/V 0..255.
+# Keep a decimal point on float values: ROS 2 rejects an integer for a double parameter.
+color_detector:
+  ros__parameters:
+    use_sim_time: true
+    hue_low_max: 8               # red band 1: H 0 .. hue_low_max (beds are H 13-15)
+    hue_high_min: 170            # red band 2: H hue_high_min .. 179
+    saturation_min: 120          # tomatoes S 245-255, beds S ~140 (at H 13-15)
+    value_min: 60                # tomatoes V 101-228
+    morph_kernel: 5              # px, closing merges a truss into one blob
+    min_area_ratio: 0.0005       # smaller blobs (far specks) are ignored
