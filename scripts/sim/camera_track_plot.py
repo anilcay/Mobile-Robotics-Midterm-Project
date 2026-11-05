@@ -35,8 +35,12 @@ POT_RADIUS = 0.15
 INNER_X, INNER_Y = 5.0, 3.0
 
 
-def to_world(x: float, y: float, spawn) -> tuple:
+def to_world(row: dict, spawn) -> tuple:
+    """World (x, y): Gazebo ground truth if recorded, else odom + spawn pose."""
+    if row.get('gt_x'):
+        return float(row['gt_x']), float(row['gt_y'])
     sx, sy, syaw = spawn
+    x, y = float(row['x']), float(row['y'])
     c, s = math.cos(syaw), math.sin(syaw)
     return sx + c * x - s * y, sy + s * x + c * y
 
@@ -65,7 +69,7 @@ def main() -> None:
     with open(os.path.join(args.run_dir, 'camera_track_states.csv')) as f:
         transitions = list(csv.DictReader(f))
     for r in path:
-        r['wx'], r['wy'] = to_world(float(r['x']), float(r['y']), args.spawn)
+        r['wx'], r['wy'] = to_world(r, args.spawn)
 
     plt.rcParams.update({'font.size': 10, 'text.color': INK, 'axes.labelcolor': INK,
                          'xtick.color': INK_2, 'ytick.color': INK_2,
@@ -92,7 +96,7 @@ def main() -> None:
     inspect = [t for t in transitions if t['to'] == 'INSPECT']
     stops = []  # [x, y, [numbers]]; stops closer than 0.15 m share one label
     for i, t in enumerate(inspect, 1):
-        wx, wy = to_world(float(t['x']), float(t['y']), args.spawn)
+        wx, wy = to_world(t, args.spawn)
         for s in stops:
             if math.hypot(s[0] - wx, s[1] - wy) < 0.15:
                 s[2].append(i)
@@ -121,14 +125,15 @@ def main() -> None:
     ax.set_xlabel('x [m] (world)')
     ax.set_ylabel('y [m] (world)')
     span = float(path[-1]['t']) - float(path[0]['t'])
-    ax.set_title(f'Camera layer on: {len(inspect)} inspections in {span:.0f} s (sim)',
-                 loc='left')
+    source = 'Gazebo ground truth' if path[0].get('gt_x') else 'odometry'
+    ax.set_title(f'Camera layer on: {len(inspect)} inspections in {span:.0f} s (sim)\n'
+                 f'pose: {source}', loc='left')
     for side in ('top', 'right'):
         ax.spines[side].set_visible(False)
     ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01, 1.0), frameon=False,
               title='behavior state\n(dots: INSPECT stops,\nnumbered in order)')
     fig.tight_layout()
-    fig.savefig(args.out, facecolor=SURFACE)
+    fig.savefig(args.out, facecolor=SURFACE, bbox_inches='tight', pad_inches=0.15)
     print('saved', args.out)
 
 
