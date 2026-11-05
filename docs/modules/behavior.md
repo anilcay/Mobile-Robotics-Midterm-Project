@@ -96,6 +96,18 @@ Durum makinesi taslağı: `ARCHITECTURE.md` §6. Kesinleşen karar kuralı aşa�
 - resume cd20: robot y = +0.875 koridorunu (saksı (−0.5, 1.30) yanından) boydan boya geçiyor, doğu dönüş alanından güney-orta koridora dönüp geri geliyor; yolda salkımları inceliyor (`docs/report/sensors/camera_track_map.png`).
 - Uçtan uca demo komutuyla (`bringup.launch.py behavior:=true use_camera:=true`, GUI + RViz) sonuç: `docs/modules/sensor-camera.md` "Doğrulama".
 
+**Regresyon ve dayanıklılık testleri (2026-11-05, Üye B dizüstü, `headless`, Gazebo gerçek pozu):**
+
+| Test | Sonuç |
+|---|---|
+| Çekirdek (kamerasız) `behavior:=true`, 180 s, 2 koşu | 31/60 ve 29/60 hücre, 33.4 / 36.5 m, en küçük açıklık **0.103 / 0.119 m**, EMERGENCY 0 — run3 (29/60, 37.1 m, 0.106 m) ile aynı → ADR-021 çekirdeği bozmadı |
+| Kamera katmanı, **300 s** | 12 inceleme, 23/60 hücre, en küçük açıklık **0.114 m**, EMERGENCY 0, kilit yok; odometri 3.34 m kaydı |
+| Ctrl+C sürüş sırasında, 6 kez | 6/6 temiz çıkış, son `/cmd_vel` `linear.x` 0.0 (kapanış düzeltmesinden sonra) |
+| Launch varyasyonları | varsayılan (`/cmd_vel` yayıncısı yok), `sensors:=false`, `use_camera:=true sensors:=false` (uyarı log'u), `world:=greenhouse_primitive.sdf` (kamera hedefi 15 Hz) ✅ |
+| Temiz klon (commit'lenmiş HEAD) | `rosdep check` tamam, `colcon build`, 61 test 0 hata, `check_urdf`, klondan launch: tam TRACK → INSPECT döngüsü, mesh hatası 0 |
+
+- **Kapanış hatası düzeltildi (Üye B):** `behavior_node` Ctrl+C'de bazen yakalanmayan `RuntimeError` + exit code 1 ile bitiyordu (sinyal işleyicisinin fırlattığı `KeyboardInterrupt` rclpy'nin C++ `take_message` dönüşümüne denk geliyordu). İşleyici artık sadece bayrak kuruyor; döngü 0.1 s içinde görüp `finally` ile sıfır hız yayınlıyor.
+
 **Tekrar etme (VM):** test betikleri şu an repo dışında (VM'de `~/serabot_ws/test_runs/`: `run_behavior.sh` başlatma + 120 s'de poz gelmezse yeniden deneme + bag + kapanış; `gt_logger.py` gerçek poz kaydı; `bag_states.py` durum özeti; Windows'ta `analyze_gt.py` açıklık + yörünge grafiği). Elle: `ros2 launch serabot_bringup bringup.launch.py behavior:=true` ve ayrı terminalde `ros2 bag record -o run --topics /behavior/state /cmd_vel`.
 
 ## Açık istekler (S0'a)
@@ -106,6 +118,9 @@ Durum makinesi taslağı: `ARCHITECTURE.md` §6. Kesinleşen karar kuralı aşa�
 4. **Test betiklerinin yeri:** `run_behavior.sh` / `gt_logger.py` / `analyze_gt.py` diğer modüllerin Gazebo testleri için de kullanılabilir; `scripts/` altına (S0) mı yoksa `serabot_behavior/tools/` altına mı konacağı kararı.
 
 ## Açık sorunlar
+
+- **Kamera katmanında güney-orta koridor cebi (bilinen sınırlama, 2026-11-05):** uzun koşuda (300 s) robot zamanın bir kısmını y = −0.875 koridorunda, koridora taşan iki saksı (1.0, −0.45) ve (−1.6, −1.30) arasında gidip gelerek geçiriyor (≥ 140°'lik AVOID dönüşleri 12/31). Neden: yatak kenarında INSPECT robotu koridor ortasından ~0.3 m kaydırıyor; devriye yönüne dönünce saksı gövde koridoruna giriyor. Kilit değil (robot çıkıyor, incelemeler sürüyor), çarpışma yok; kamerasız modda görülmüyor. İlk 2–3 dk (demo süresi) üç koşuda sorunsuz. Olası düzeltme: INSPECT sonrası koridor ortalamasını beklemek veya kısa geri çekilme — teslim öncesi kod dondurulduğu için yapılmadı.
+- **Odometri kayması:** uzun koşularda `/odom` gerçek pozdan 1–3.3 m sapıyor (yerinde dönüşler, IMU füzyonu yok). Davranış odometri kullanmadığı için etkilenmez; RViz'de sabit çerçeve `odom` olduğundan model dünyaya göre kayar. Değerlendirmeler Gazebo gerçek pozuyla yapıldı.
 
 - `inspect_area` 0.08: 6 cm'lik domates 60° FOV'da ancak ~0.2 m'de görüntünün %8'ini kaplar; yatak yüzünden bu kadar yaklaşılamaz. Bu yüzden TRACK'te yatağa varmak da INSPECT'i tetikliyor. Kamera modülü hazır olunca alan değeri ölçülüp ayarlanmalı.
 - Koridor ortalaması koridorlarda hafif yılankavi iz bırakıyor (run3 grafiği); çarpışma riski yaratmadı, istenirse kazanç düşürülebilir.
