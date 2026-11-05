@@ -1,6 +1,6 @@
 # Arayüz Sözleşmesi
 
-**Sürüm:** 0.9 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017) · 0.7: renk setleri + `gazebo_mesh_colors`, tekerlek küre çarpışması (§4.1, §6, ADR-019), karma dünya (§4.2, ADR-018) · 0.8: spawn varsayılanı (−4.0, 0.875, 0) ve dünya yerleşimi (§4.2, §6) · 0.9: davranış parametreleri ve `WAIT` durumu (§2.5, §7), `headless` argümanı (§6)
+**Sürüm:** 0.9 (taslak) — 2026-10-24 · 0.2: mesh kuralları (§4.1, ADR-012) · 0.3: xacro makro sözleşmesi (§8) · 0.4: mesh formatı `.glb`, yedek `.obj` (§4.1, ADR-015) · 0.5: yön testi sonucu → `.obj` + `.mtl` (§4.1) · 0.6: `base_link` aks ortasına taşındı, montaj noktaları +0.12 m x (§4, ADR-017) · 0.7: renk setleri + `gazebo_mesh_colors`, tekerlek küre çarpışması (§4.1, §6, ADR-019), karma dünya (§4.2, ADR-018) · 0.8: spawn varsayılanı (−4.0, 0.875, 0) ve dünya yerleşimi (§4.2, §6) · 0.9: davranış parametreleri ve `WAIT` durumu (§2.5, §7), `headless` argümanı (§6) · 0.10 (2026-11-05, Üye B, ekip onayıyla): `use_camera` launch argümanı, `headless` uygulandı (§6); `target_cooldown` 20, `resume_patrol`, `resume_min_deg` (§7); büyük görüntülerde reliable QoS istisnası (§1); `color_detector` parametreleri (§7.1) — ADR-021
 
 Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan topic, frame, mesaj tipi ve boyutları kullanır. Değişiklik sadece S0 tarafından, `DECISIONS.md` kaydı ile yapılır; diğer oturumlar değişiklik isteğini kendi modül dosyasına yazar.
 
@@ -13,6 +13,7 @@ Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan
 - Tüm node'lar: `use_sim_time: true`
 - Gazebo ve ROS tarafında topic adları aynı tutulur (bridge sadece tip çevirir).
 - Sensör abonelikleri: `qos_profile_sensor_data` (best effort; bridge'in reliable yayınıyla uyumlu).
+- **İstisna — büyük görüntüler** (`/camera/image_raw`, `/camera/image_annotated`): **reliable, KEEP_LAST 1** okunur (node'lar ve RViz). ~0.9 MB'lık kare Fast DDS paylaşımlı bellek segmentinden büyük olduğu için UDP parçalarıyla gider; best-effort okuyucu 15 Hz'in ~1.75 Hz'ini alıyordu (ADR-021, `docs/modules/sensor-camera.md`).
 
 ## 2. Topic'ler
 
@@ -26,7 +27,7 @@ Bu dosya modüller arasındaki **tek doğru kaynaktır**. Modüller burada yazan
 | `/tf` | `tf2_msgs/msg/TFMessage` | `gz.msgs.Pose_V` | GZ→ROS | DiffDrive (sadece `odom→base_footprint`) |
 | `/joint_states` | `sensor_msgs/msg/JointState` | `gz.msgs.Model` | GZ→ROS | JointStatePublisher sistemi |
 
-Not: `/cmd_vel` tipi `Twist` (stamped değil). Lyrical'da `teleop_twist_keyboard` varsayılanının `Twist` olduğu ⚠ doğrulanacak; değilse `stamped:=false` parametresi kullanılır.
+Not: `/cmd_vel` tipi `Twist` (stamped değil). Lyrical'da `teleop_twist_keyboard`'un `stamped` parametresi varsayılan `false` → düz `Twist` yayınlar ✅ (2026-11-05, kaynak koddan doğrulandı).
 
 ### 2.2 LiDAR (sahip: Üye A — `config/bridge/lidar.yaml`)
 
@@ -43,7 +44,7 @@ Not: `/cmd_vel` tipi `Twist` (stamped değil). Lyrical'da `teleop_twist_keyboard
 | `/camera/image_raw` | `sensor_msgs/msg/Image` | `gz.msgs.Image` | GZ→ROS | `camera_optical_link` |
 | `/camera/camera_info` | `sensor_msgs/msg/CameraInfo` | `gz.msgs.CameraInfo` | GZ→ROS | `camera_optical_link` |
 
-Özellikler: 640×480, RGB8, 15 Hz, yatay FOV 1.047 rad (60°). Camera info topic adının Gazebo'da nasıl türetildiği ⚠ doğrulanacak.
+Özellikler: 640×480, RGB8, 15 Hz, yatay FOV 1.047 rad (60°). Camera info topic'i SDF'te `<camera_info_topic>` ile açıkça verilir ✅ (Linux'ta doğrulandı, `docs/modules/sensor-camera.md`).
 
 ### 2.4 IMU (sahip: ortak — `config/bridge/imu.yaml`)
 
@@ -161,7 +162,8 @@ DiffDrive parametreleri: `left_joint=left_wheel_joint`, `right_joint=right_wheel
 | `rviz` | `true` | RViz2'yi aç |
 | `behavior` | `false` | Davranış node'unu başlat |
 | `sensors` | `true` | Yardımcı sensör node'larını (`color_detector`, `imu_monitor`) başlat |
-| `headless` | `false` | `true`: Gazebo GUI'siz (`-s`) çalışır; RViz tek görsel. VM'de RTF ≈ 0.38 → ≈ 0.48 (S3 ölçümü). S2 uygulayacak |
+| `use_camera` | `false` | Davranışın kamera katmanı (TRACK / INSPECT): `behavior_node`'a `use_camera` parametresi olarak geçer (`behavior.yaml`'ı ezer). `behavior:=true` ve `sensors:=true` ister |
+| `headless` | `false` | `true`: Gazebo GUI'siz (`-s`) çalışır; RViz tek görsel. VM'de RTF ≈ 0.38 → ≈ 0.48 (S3 ölçümü); Üye B dizüstünde ≈ 0.4–0.6 → ≈ 1.0 |
 | `x`, `y`, `yaw` | `-4.0`, `0.875`, `0.0` | Spawn pozisyonu: batı dönüş alanı, y = +0.875 koridorunun girişi, +x yönüne bakar |
 
 Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu` — varsayılan `true`; `gazebo_mesh_colors` — varsayılan `false` (RViz renk seti). `robot_state_publisher`'a giden URDF varsayılanla, Gazebo'ya spawn edilen URDF `gazebo_mesh_colors:=true` ile üretilir (spawn `robot_description` topic'inden değil, ayrı xacro çıktısından).
@@ -187,10 +189,22 @@ Xacro argümanları (`serabot.urdf.xacro`): `use_lidar`, `use_camera`, `use_imu`
 | `side_margin`, `rotate_margin`, `rotate_sweep_deg` | 0.05, 0.02, 90 | m, m, derece |
 | `backup_speed`, `backup_duration`, `rear_clear_distance` | 0.1, 1.5, 0.15 | m/s, s, m |
 | `scan_timeout`, `imu_timeout`, `target_timeout` | 0.5, 0.3, 0.5 | s |
-| `track_gain`, `track_speed`, `target_cooldown` | 0.8, 0.12, 8.0 | rad/s, m/s, s |
+| `track_gain`, `track_speed`, `target_cooldown` | 0.8, 0.12, **20.0** | rad/s, m/s, s (0.10'da 8 → 20, ADR-021) |
+| `resume_patrol`, `resume_min_deg` | true, 10.0 | —, derece — INSPECT sonrası TRACK başlangıcındaki yöne (IMU yaw) geri dön; daha küçük düzeltmede normal AVOID |
 | `centering_gain`, `centering_range`, `max_centering` | 0.5, 1.0, 0.3 | rad/s/m, m, rad/s |
 
 Karar kuralının tamamı: `docs/modules/behavior.md`, `docs/report/behavior/behavior_design.md`.
+
+### 7.1 Renk dedektörü (`color_detector` — varsayılanlar `config/color_detector.yaml`)
+
+| Parametre | Varsayılan | Açıklama |
+|---|---|---|
+| `hue_low_max`, `hue_high_min` | 8, 170 | Kırmızı iki ton bandı: H ≤ 8 veya H ≥ 170 (OpenCV H 0–179) |
+| `saturation_min`, `value_min` | 120, 60 | S ve V alt sınırları (0–255) |
+| `morph_kernel` | 5 | px, kapanış çekirdeği (salkımı tek blob yapar) |
+| `min_area_ratio` | 0.0005 | Bundan küçük bloblar yok sayılır (görüntü alanı oranı) |
+
+`config/*.yaml` değerleri koddaki varsayılanlarla aynı olmak zorunda; `test_config.py` / `test_color_config.py` bunu denetler.
 
 ## 8. Xacro makro sözleşmesi
 
