@@ -44,7 +44,10 @@ behavior_node:
     # --- camera layer ---
     track_gain: 0.8              # rad/s per unit offset
     track_speed: 0.12            # m/s
-    target_cooldown: 8.0         # s targets are ignored after an inspection
+    target_cooldown: 20.0        # s targets are ignored after an inspection (8 s: robot
+                                 #   kept inspecting in the turning area, sensor-camera.md)
+    resume_patrol: true          # after INSPECT turn back to the heading before TRACK
+    resume_min_deg: 10.0         # smaller corrections use a normal AVOID turn
 
     # --- corridor centering while cruising (0 disables) ---
     centering_gain: 0.5          # rad/s per m of (left_min - right_min)

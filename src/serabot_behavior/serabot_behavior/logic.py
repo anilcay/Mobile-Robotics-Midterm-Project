@@ -66,7 +66,12 @@ class BehaviorParams:
     # Camera layer
     track_gain: float = 0.8
     track_speed: float = 0.12
-    target_cooldown: float = 8.0
+    target_cooldown: float = 20.0  # 8 s kept the robot in the turning area (Member B tests)
+    # After INSPECT, turn back to the heading the robot had when it started
+    # tracking (IMU yaw) instead of a generic AVOID turn, so the patrol goes on
+    # along the corridor. Smaller corrections than resume_min_deg use AVOID.
+    resume_patrol: bool = True
+    resume_min_deg: float = 10.0
     # Corridor centering while cruising (0 disables it)
     centering_gain: float = 0.5
     centering_range: float = 1.0
@@ -242,9 +247,11 @@ class BehaviorStateMachine:
         self._reasons: List[str] = []
         self._direction = 1
         self._turned = 0.0
+        self._turn_goal = math.radians(params.turn_angle_deg)
         self._turn_prev_time = 0.0
         self._turn_prev_yaw = 0.0
         self._cooldown_until = -math.inf
+        self._patrol_yaw: Optional[float] = None  # IMU yaw when TRACK started
 
     # -- inputs -------------------------------------------------------------
 
@@ -293,6 +300,8 @@ class BehaviorStateMachine:
             return self._start_avoid(
                 now, scan, f'front {scan.front_min:.2f} m < {p.obstacle_distance} m')
         if self._target_ready(now):
+            fresh_imu = self.imu.is_fresh(now, p.imu_timeout)
+            self._patrol_yaw = self.imu.yaw if fresh_imu else None
             self._enter(State.TRACK, now, 'target seen')
             return self._track(now, scan)
         return self._command(p.forward_speed, self._centering(scan))
@@ -303,8 +312,7 @@ class BehaviorStateMachine:
         clearance = scan.rotate_clear_left if self._direction > 0 else scan.rotate_clear_right
         if clearance < p.rotate_margin:
             return self._start_emergency(now, scan, 'no room to keep turning')
-        if (self._turned >= math.radians(p.turn_angle_deg)
-                and scan.front_min > p.clear_distance):
+        if self._turned >= self._turn_goal and scan.front_min > p.clear_distance:
             self._enter(State.CRUISE, now,
                         f'turned {self.turned_deg:.0f} deg ({self.turn_source}), '
                         f'front {scan.front_min:.2f} m')
@@ -341,6 +349,10 @@ class BehaviorStateMachine:
     def _inspect(self, now: float, scan: ScanSummary) -> Command:
         if now - self._since >= self.p.inspect_duration:
             self._cooldown_until = now + self.p.target_cooldown
+            patrol_yaw, self._patrol_yaw = self._patrol_yaw, None
+            if (self.p.resume_patrol and patrol_yaw is not None
+                    and self.imu.is_fresh(now, self.p.imu_timeout)):
+                return self._start_resume(now, scan, _wrap(patrol_yaw - self.imu.yaw))
             return self._start_avoid(now, scan, 'inspection done')
         return self._command(0.0, 0.0)
 
@@ -359,10 +371,32 @@ class BehaviorStateMachine:
             self._direction = 1 if can_left else -1
         side = 'left' if self._direction > 0 else 'right'
         self._enter(State.AVOID, now, f'{reason}; turning {side}')
+        self._begin_turn(now, math.radians(p.turn_angle_deg))
+        return self._command(0.0, self._direction * p.turn_speed)
+
+    def _start_resume(self, now: float, scan: ScanSummary, error: float) -> Command:
+        """Turn back by `error` rad (left positive) to the patrol heading, in AVOID.
+
+        Falls back to a normal AVOID turn when the correction is small or there is
+        no room to turn that way; the AVOID exit rule (front clear) still applies.
+        """
+        p = self.p
+        direction = 1 if error > 0.0 else -1
+        clearance = scan.rotate_clear_left if direction > 0 else scan.rotate_clear_right
+        if abs(error) < math.radians(p.resume_min_deg) or clearance < p.rotate_margin:
+            return self._start_avoid(now, scan, 'inspection done')
+        self._direction = direction
+        side = 'left' if direction > 0 else 'right'
+        self._enter(State.AVOID, now, f'inspection done; back to patrol heading, '
+                                      f'turning {side} {math.degrees(abs(error)):.0f} deg')
+        self._begin_turn(now, abs(error))
+        return self._command(0.0, direction * p.turn_speed)
+
+    def _begin_turn(self, now: float, goal: float) -> None:
         self._turned = 0.0
+        self._turn_goal = goal
         self._turn_prev_time = now
         self._turn_prev_yaw = self.imu.yaw
-        return self._command(0.0, self._direction * p.turn_speed)
 
     def _start_emergency(self, now: float, scan: ScanSummary, reason: str) -> Command:
         self._enter(State.EMERGENCY, now, reason)

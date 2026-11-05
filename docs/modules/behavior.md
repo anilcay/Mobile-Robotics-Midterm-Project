@@ -27,7 +27,7 @@ Durum makinesi taslağı: `ARCHITECTURE.md` §6. Kesinleşen karar kuralı aşa�
 | AVOID | 0, ±`turn_speed` | Girişte: dönüş için yeri olan taraflardan ortalaması büyük olan seçilir ve kilitlenir; iki tarafta da yer yoksa → EMERGENCY. Dönülen açı ≥ `turn_angle_deg` **ve** `front_min > clear_distance` → CRUISE; dönerken yer kalmazsa → EMERGENCY |
 | EMERGENCY | −`backup_speed` (arka `rear_gap > rear_clear_distance` ise, değilse 0), 0 | `backup_duration` doldu → AVOID |
 | TRACK | `track_speed`, `−track_gain·offset` (±`turn_speed` ile sınırlı) | `front_min < emergency_distance` → EMERGENCY; hedef kayboldu (> 0.5 s) → CRUISE; alan ≥ `inspect_area` **veya** `front_min < obstacle_distance` (yatağa varıldı) → INSPECT |
-| INSPECT | 0, 0 | `inspect_duration` doldu → AVOID; `target_cooldown` süresince hedefler yok sayılır |
+| INSPECT | 0, 0 | `inspect_duration` doldu → AVOID; `target_cooldown` (20 s) süresince hedefler yok sayılır. `resume_patrol` açıksa AVOID dönüşü **devriye yönüne** yapılır: TRACK'e girişteki IMU yaw'ı ile şimdiki yaw farkı kadar, o yöne (ADR-021). Fark < `resume_min_deg` (10°), o yönde dönüş yeri yok veya IMU yoksa normal AVOID (açık taraf, `turn_angle_deg`) |
 
 - **Dönüş açısı:** IMU `ω_z` mesaj damgalarıyla integre edilir. IMU `imu_timeout` (0.3 s) içinde gelmediyse o adımda `turn_speed · dt` yedeği kullanılır (`turn_source` = `imu` / `time`).
 - **AVOID'de acil durum yok:** `emergency_distance` 0.3 m (LiDAR) ≈ `base_link`'ten 0.52 m > 0.376 m; yerinde dönüş güvenli olduğu sürece geri çekilmeye gerek yok. Bu, EMERGENCY ↔ AVOID döngüsünü önler.
@@ -59,10 +59,11 @@ Durum makinesi taslağı: `ARCHITECTURE.md` §6. Kesinleşen karar kuralı aşa�
 
 - `python -m pytest src/serabot_behavior/test` geçiyor (Windows).
 - Gazebo'da robot 3 dakika boyunca sera koridorlarında duvara/saksıya çarpmadan dolaşıyor (Linux).
-- `use_camera:=true` ile kırmızı ürüne yönelip duruyor (Linux, opsiyonel).
+- `use_camera:=true` ile kırmızı ürüne yönelip duruyor (Linux, opsiyonel). ✅ 2026-11-05 (aşağıda)
 
 ## Yapılanlar
 
+- 2026-11-05 (Üye B, ekip onayıyla — ADR-021): `logic.py`'ye `resume_patrol` / `resume_min_deg` (`_start_resume`, `_begin_turn`, AVOID hedef açısı `_turn_goal`), `target_cooldown` 8 → 20 s; `behavior.yaml` güncellendi; `test/test_logic.py`'ye 5 test (devriye yönüne dönüş, ön açılana kadar bekleme, küçük fark, kapalıyken, dönüş yeri yokken) ve `test/test_config.py` (yaml ↔ `BehaviorParams`). Eski 26 test değişmeden geçiyor. Launch: `use_camera` argümanı.
 - 2026-10-26: `serabot_behavior/logic.py` (tarama analizi, `YawIntegrator`, `BehaviorStateMachine`), `test/test_logic.py` (24 test durumu), `test/conftest.py` (kaynak ağacından pytest için `sys.path`).
 - 2026-10-26: `serabot_behavior/behavior_node.py`, `serabot_bringup/config/behavior.yaml` (§7 varsayılanları aynen + yeni parametreler, float değerler ondalıklı).
 
@@ -81,7 +82,19 @@ Durum makinesi taslağı: `ARCHITECTURE.md` §6. Kesinleşen karar kuralı aşa�
 
 - run3 bag'i (`/behavior/state`, `/cmd_vel`, `/odom`, `/scan`, `/imu`, `/rosout`): CRUISE 1540, AVOID 368 adım (10 Hz). Kapanışta son iki `/cmd_vel` sıfır → kapanışta durma doğrulandı. Ayrıca sim'siz testte SIGINT → node çıktı ve sıfır `Twist` yayınladı.
 - run2 kilidinin nedeni: robot koridorda duvara 0.4 m'ye kadar çapraz yaklaştı, gövde koridoru kontrolü duvarı "önde" gördü (AVOID), 0.376 + 0.05 m dönüş payı iki yönde de sağlanmadı, düz geri gitmek yanal konumu değiştirmedi. Çözüm: koridor ortalama (çapraz yaklaşmayı önler) + payı 0.02 m'ye indirmek (0.4 m'de dönüş geometrik olarak çarpışmasız).
-- Tek koşu (run3) sonucu; tekrar edilebilirlik ve kamera katmanı (`use_camera: true`) Gazebo'da **doğrulanmadı**.
+- Tek koşu (run3) sonucu; kamerasız çekirdeğin tekrar edilebilirliği ayrıca ölçülmedi.
+
+**Kamera katmanı (`use_camera:=true`), 2026-11-05, Üye B dizüstü (WSL2 Ubuntu 26.04 + Lyrical + Jetty, doğrudan kurulum).** 180 s sim, varsayılan spawn, `greenhouse.sdf`; çarpışma/açıklık **Gazebo gerçek pozuyla** (`/world/greenhouse/dynamic_pose/info` köprüsü, `scripts/sim/camera_track_stats.py`, gövde = şasi kutusu + tekerlek küreleri). Odometri bu koşularda 0.77–0.88 m kaydığı için odometri tabanlı açıklık kanıt sayılmaz.
+
+| Koşu | Ayar | Hücre (1×1 m) | x aralığı | İnceleme | En küçük açıklık | EMERGENCY |
+|---|---|---|---|---|---|---|
+| cd8 (eski mantık) | `target_cooldown` 8, devriyeye dönüş yok | 9/60 | −5…−4 | 5 (117 s) | 0.307 m (odometri) | 0 |
+| cd20 (eski mantık) | 20, dönüş yok | 9/60 | −5…−4 | 7 | 0.073 m (odometri) | 0 |
+| resume cd8 | 8, `resume_patrol` | 13/60 | −5…−2 | 10 | **0.062 m** (gerçek) | 0 |
+| **resume cd20** | **20, `resume_patrol`** | **21/60** | **−4…+4** | **7** | **0.128 m** (gerçek) | **0** |
+
+- resume cd20: robot y = +0.875 koridorunu (saksı (−0.5, 1.30) yanından) boydan boya geçiyor, doğu dönüş alanından güney-orta koridora dönüp geri geliyor; yolda salkımları inceliyor (`docs/report/sensors/camera_track_map.png`).
+- Uçtan uca demo komutuyla (`bringup.launch.py behavior:=true use_camera:=true`, GUI + RViz) sonuç: `docs/modules/sensor-camera.md` "Doğrulama".
 
 **Tekrar etme (VM):** test betikleri şu an repo dışında (VM'de `~/serabot_ws/test_runs/`: `run_behavior.sh` başlatma + 120 s'de poz gelmezse yeniden deneme + bag + kapanış; `gt_logger.py` gerçek poz kaydı; `bag_states.py` durum özeti; Windows'ta `analyze_gt.py` açıklık + yörünge grafiği). Elle: `ros2 launch serabot_bringup bringup.launch.py behavior:=true` ve ayrı terminalde `ros2 bag record -o run --topics /behavior/state /cmd_vel`.
 

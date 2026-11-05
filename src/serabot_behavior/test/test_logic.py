@@ -261,6 +261,79 @@ def test_inspect_then_turn_away_with_cooldown():
     assert cmd.state == State.CRUISE
 
 
+def track_then_inspect(sim: Sim, offset: float, track_ticks: int, yaw_rate: float):
+    """CRUISE with IMU, TRACK for `track_ticks` ticks (turning), then reach the bed."""
+    sim.step(yaw_rate=0.0)
+    for _ in range(track_ticks):
+        sim.sm.on_target(sim.t, offset, 0.01)
+        cmd = sim.step(yaw_rate=yaw_rate)
+        assert cmd.state == State.TRACK
+    sim.sm.on_target(sim.t, 0.0, 0.01)
+    cmd = sim.step([FRONT_WALL], yaw_rate=0.0)
+    assert cmd.state == State.INSPECT
+    while cmd.state == State.INSPECT:
+        cmd = sim.step([FRONT_WALL], yaw_rate=0.0)
+    return cmd
+
+
+def test_resume_turns_back_to_patrol_heading():
+    # Tracking a target on the right turns the robot right; the patrol heading is
+    # the yaw at TRACK entry (after that tick's IMU samples: -0.05 rad), so the
+    # turn while tracking is 9 ticks x 0.05 rad = 0.45 rad (26 deg). After the
+    # inspection the robot turns left by that angle and cruises on.
+    sim = Sim(use_camera=True)
+    cmd = track_then_inspect(sim, offset=0.6, track_ticks=10, yaw_rate=-0.5)
+    assert cmd.state == State.AVOID
+    assert cmd.angular > 0.0
+    assert 'back to patrol heading, turning left 26 deg' in cmd.reason
+    while cmd.state == State.AVOID:
+        cmd = sim.step(yaw_rate=sim.p.turn_speed)
+    assert cmd.state == State.CRUISE
+    assert math.degrees(sim.sm._turned) == pytest.approx(26.0, abs=5.0)
+    assert sim.sm.imu.yaw == pytest.approx(-0.05, abs=0.1)  # one tick = 0.08 rad
+
+
+def test_resume_waits_for_clear_front():
+    sim = Sim(use_camera=True)
+    cmd = track_then_inspect(sim, offset=-0.6, track_ticks=10, yaw_rate=0.5)
+    assert cmd.angular < 0.0  # back to the right
+    for _ in range(10):  # goal angle reached, but the bed is still 0.7 m ahead
+        cmd = sim.step([(-20, 20, 0.7)], yaw_rate=-sim.p.turn_speed)
+    assert cmd.state == State.AVOID
+    assert sim.step(yaw_rate=-sim.p.turn_speed).state == State.CRUISE
+
+
+def test_small_heading_error_uses_normal_avoid():
+    sim = Sim(use_camera=True)
+    cmd = track_then_inspect(sim, offset=0.1, track_ticks=2, yaw_rate=-0.2)  # ~2 deg
+    assert cmd.state == State.AVOID
+    assert 'patrol heading' not in cmd.reason
+    assert sim.sm._turn_goal == pytest.approx(math.radians(sim.p.turn_angle_deg))
+
+
+def test_resume_disabled_uses_normal_avoid():
+    sim = Sim(use_camera=True, resume_patrol=False)
+    cmd = track_then_inspect(sim, offset=0.6, track_ticks=10, yaw_rate=-0.5)
+    assert cmd.state == State.AVOID
+    assert 'patrol heading' not in cmd.reason
+
+
+def test_resume_needs_room_to_turn():
+    # Return turn is to the left, but the left front corner is blocked.
+    sim = Sim(use_camera=True)
+    sim.step(yaw_rate=0.0)
+    for _ in range(10):
+        sim.sm.on_target(sim.t, 0.6, 0.01)
+        sim.step(yaw_rate=-0.5)
+    sim.sm.on_target(sim.t, 0.0, 0.01)
+    cmd = sim.step([FRONT_WALL, LEFT_CORNER], yaw_rate=0.0)
+    while cmd.state == State.INSPECT:
+        cmd = sim.step([FRONT_WALL, LEFT_CORNER], yaw_rate=0.0)
+    assert cmd.state == State.AVOID
+    assert cmd.angular < 0.0
+    assert 'patrol heading' not in cmd.reason
+
+
 def test_reaching_bed_while_tracking_inspects():
     sim = Sim(use_camera=True)
     sim.sm.on_target(0.0, 0.0, 0.01)

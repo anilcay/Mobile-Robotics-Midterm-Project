@@ -119,14 +119,14 @@ stateDiagram-v2
   TRACK --> INSPECT: hedef alanı >= inspect_area VEYA yatağa varıldı
   TRACK --> CRUISE: hedef kayboldu
   TRACK --> EMERGENCY: front_min < emergency_distance
-  INSPECT --> AVOID: inspect_duration doldu (target_cooldown başlar)
+  INSPECT --> AVOID: inspect_duration doldu (target_cooldown başlar; devriye yönüne dön)
 ```
 
 - **WAIT:** tarama yok/eski → dur.
 - **CRUISE:** sabit ileri hız + koridor ortalama (`centering_gain`).
 - **AVOID:** dönüş yeri olan taraflardan daha açık olana yerinde dön; dönülen açı IMU açısal hızının integrali (IMU yoksa zaman tabanlı yedek). Gövdenin süpürdüğü yarıçap 0.376 m hesaba katılır.
 - **TRACK** (opsiyonel katman): `angular.z = -k · offset`, yavaş ileri hız.
-- **INSPECT:** dur, `inspect_duration` saniye bekle (ürün "denetleniyor").
+- **INSPECT:** dur, `inspect_duration` saniye bekle (ürün "denetleniyor"); sonra TRACK'ten önceki devriye yönüne dönüp devam et (`resume_patrol`, ADR-021).
 - **EMERGENCY:** dur ve kısa süre geri git.
 
 Çekirdek (zorunlu) davranış: CRUISE + AVOID + EMERGENCY — sadece LiDAR ve IMU'ya bağlıdır. Kamera katmanı (TRACK/INSPECT) `use_camera` parametresiyle açılır; kamera modülü hazır olmasa da demo çalışır.
