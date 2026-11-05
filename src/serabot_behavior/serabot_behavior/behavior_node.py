@@ -7,6 +7,7 @@ Decision logic lives in serabot_behavior.logic; this node only does ROS I/O.
 
 from dataclasses import fields
 import signal
+import threading
 import time
 from typing import Optional
 
@@ -90,24 +91,29 @@ class BehaviorNode(Node):
             time.sleep(0.05)
 
 
-def _interrupt(signum, frame) -> None:
-    raise KeyboardInterrupt
+_stop_requested = threading.Event()
+
+
+def _request_stop(signum, frame) -> None:
+    # Only set a flag. Raising KeyboardInterrupt here (as before) could land inside
+    # rclpy's C++ message conversion and surface as an uncaught RuntimeError, so
+    # Ctrl+C sometimes ended in a traceback and exit code 1 (Member B, 2026-11-05).
+    _stop_requested.set()
 
 
 def main(args=None) -> None:
     # Own SIGINT/SIGTERM handling keeps the context alive long enough to send the
     # stop command; set explicitly because SIGINT may be inherited as ignored.
-    signal.signal(signal.SIGINT, _interrupt)
-    signal.signal(signal.SIGTERM, _interrupt)
+    signal.signal(signal.SIGINT, _request_stop)
+    signal.signal(signal.SIGTERM, _request_stop)
     rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     node = BehaviorNode()
     try:
         # spin_once with a wall-time timeout returns to Python regularly, so the
-        # signal handler runs even when no /clock arrives (sim-time timers idle).
-        while True:
+        # stop flag is seen within 0.1 s even when no /clock arrives (sim-time
+        # timers idle).
+        while not _stop_requested.is_set():
             rclpy.spin_once(node, timeout_sec=0.1)
-    except KeyboardInterrupt:
-        pass
     finally:
         node.stop()
         node.destroy_node()
