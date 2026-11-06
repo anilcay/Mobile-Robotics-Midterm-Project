@@ -3,7 +3,7 @@
 Kaynak: *BIMU4101 – Introduction to Mobile Robotics, Midterm Project* dökümanı.
 Ekip 2 kişi olduğu için en az **3 farklı sensör tipi** gerekir.
 
-Son güncelleme: 2026-10-27. Durum değerleri: `Başlamadı` · `Devam` · `Statik doğrulandı` (Windows'ta derleme/test) · `Linux'ta doğrulandı` · `Tamam`
+Son güncelleme: 2026-11-06. Durum değerleri: `Başlamadı` · `Devam` · `Statik doğrulandı` (Windows'ta derleme/test) · `Linux'ta doğrulandı` · `Tamam`
 
 ## Robot
 
@@ -36,10 +36,10 @@ Son güncelleme: 2026-10-27. Durum değerleri: `Başlamadı` · `Devam` · `Stat
 
 | ID | Gereksinim | Kabul kriteri / kanıt | Modül | Durum |
 |---|---|---|---|---|
-| R13 | Kod public GitHub reposunda | https://github.com/anilcay/Mobile-Robotics-Midterm-Project | S0 | Devam |
-| R14 | Her üye kendi işini commit'liyor; geçmiş katkıyı yansıtıyor | Üye A ve Üye B'nin kendi commit'leri | Tümü | Devam — sadece Üye A commit'leri var |
-| R15 | Repo çalıştırmak için gereken her şeyi içeriyor; README'de kurulum ve çalıştırma | Temiz bir Ubuntu 26.04'te README adımlarıyla çalışıyor | S0 | Devam — README yazıldı (2026-11-05); adımlar Üye B'nin sıfırdan WSL2 Ubuntu 26.04 kurulumundan |
-| R16 | Rapor `studentAID_studentBID.pdf`, Canvas'a tek teslim — **8 Kasım 2026 23:59** | İsimler, numaralar, repo linki, tasarım, sensörler (topic/mesaj tipi, kanıt), katkı tablosu, paket/node açıklamaları, simülasyon sonuçları | Rapor | Başlamadı |
+| R13 | Kod public GitHub reposunda | https://github.com/anilcay/Mobile-Robotics-Midterm-Project | S0 | Tamam — public |
+| R14 | Her üye kendi işini commit'liyor; geçmiş katkıyı yansıtıyor | Üye A ve Üye B'nin kendi commit'leri | Tümü | Tamam — Üye A 23, Üye B 9 commit |
+| R15 | Repo çalıştırmak için gereken her şeyi içeriyor; README'de kurulum ve çalıştırma | Temiz bir Ubuntu 26.04'te README adımlarıyla çalışıyor | S0 | Tamam — README; temiz klondan derleme ve çalıştırma doğrulandı |
+| R16 | Rapor `studentAID_studentBID.pdf`, Canvas'a tek teslim — **8 Kasım 2026 23:59** | İsimler, numaralar, repo linki, tasarım, sensörler (topic/mesaj tipi, kanıt), katkı tablosu, paket/node açıklamaları, simülasyon sonuçları | Rapor | Devam — taslak PDF `docs/report/`; eksik kanıtlar ve Canvas teslimi bekliyor |
 | R17 | Sunum 9 Kasım 2026 11:10, 8 dk + 2 dk soru; her üye kendi katkısını anlatıyor | Prova yapıldı | Tümü | Başlamadı |
 | R18 | Canlı demo: hareket, tüm sensör verileri, görselleştirme, davranış node'u; **yedek demo videosu** | Video kaydı repoda veya bağlantı olarak hazır | Tümü | Başlamadı |
 

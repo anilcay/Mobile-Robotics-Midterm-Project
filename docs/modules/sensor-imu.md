@@ -1,6 +1,6 @@
 # Modül S3c — IMU (Ek sensör, ortak sorumluluk)
 
-- **Sorumlu:** Üye A + Üye B (ortak) · **Faz:** F2 (29 Eki–1 Kas) · **Durum:** Entegrasyon (xacro + bridge, Üye A) VM'de doğrulandı (`39aa75e`) · `imu_monitor` + grafik (Üye B) tamam, Linux'ta doğrulandı (2026-11-04) — commit bekliyor (Üye B'nin hesabından)
+- **Sorumlu:** Üye A + Üye B (ortak) · **Faz:** F2 (29 Eki–1 Kas) · **Durum:** Entegrasyon (xacro + bridge, Üye A) VM'de doğrulandı (`930c993`) · `imu_monitor` + grafik (Üye B) tamam, Linux'ta doğrulandı (2026-11-04) — commit bekliyor (Üye B'nin hesabından)
 - **İş bölümü önerisi:** Üye A sensör entegrasyonu (xacro + bridge), Üye B görselleştirme (`imu_monitor` + rqt_plot). Raporda katkı tablosuna bu şekilde yazılır; değişirse burada güncellenir.
 - **Sahip olunan yollar:** `src/serabot_description/urdf/sensors/imu.xacro`, `src/serabot_bringup/config/bridge/imu.yaml`, `src/serabot_sensors/serabot_sensors/imu_monitor.py` (+ testi)
 - **Bağımlı olduğu:** S1 (`base_link`), S2 (imu sistemi), `INTERFACES.md` §2.4, §2.5, §4

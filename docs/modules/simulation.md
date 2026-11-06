@@ -94,9 +94,9 @@ ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.25}}"
 
 ## Açık istekler (S0'a)
 
-- ~~`INTERFACES.md` §6 — spawn varsayılanı (−4.0, 0.875, 0.0)~~ ✅ v0.8'de uygulandı (`c85a9d2`); launch varsayılanları güncellendi.
-- ~~`serabot_bringup/package.xml` — `python3-yaml`~~ ✅ uygulandı (`c85a9d2`).
-- ~~`INTERFACES.md` §4.2 — dünya yerleşimi notu~~ ✅ v0.8'de eklendi (`c85a9d2`).
+- ~~`INTERFACES.md` §6 — spawn varsayılanı (−4.0, 0.875, 0.0)~~ ✅ v0.8'de uygulandı (`67efc07`); launch varsayılanları güncellendi.
+- ~~`serabot_bringup/package.xml` — `python3-yaml`~~ ✅ uygulandı (`67efc07`).
+- ~~`INTERFACES.md` §4.2 — dünya yerleşimi notu~~ ✅ v0.8'de eklendi (`67efc07`).
 
 Açık istek yok.
 

@@ -10,7 +10,7 @@ Bu dosya projede çalışan **tüm Claude Code oturumlarının** ortak bağlamı
 - **Repo:** https://github.com/anilcay/Mobile-Robotics-Midterm-Project
 - **Ekip (2 kişi → en az 3 sensör tipi):**
   - Üye A — anilcay: LiDAR sorumlusu
-  - Üye B — (isim TBD): Kamera sorumlusu
+  - Üye B — Enes Çelik (enescelik00): Kamera sorumlusu
   - Ek sensör IMU: ortak sorumluluk
 - **Teslim:** Rapor 8 Kasım 2026 23:59 (hedef: 7 Kasım), sunum + canlı demo 9 Kasım 2026 11:10.
 
@@ -97,6 +97,7 @@ Geliştirme şu an **Windows 10** üzerinde yapılıyor; ROS 2 / Gazebo yerelde 
 - Ana dal `main`. Paylaşılan klasörde **branch değiştirme** (diğer oturumları etkiler).
 - Commit ve push **sadece kullanıcı isteyince** yapılır.
 - Sadece kendi dosyalarını stage'le: `git add <yol>` — `git add -A` / `git add .` kullanma.
+- Commit mesajlarına ve PR açıklamalarına `Co-Authored-By` veya benzeri Claude atıf satırı eklenmez.
 - Commit mesajı formatı: `[modül] kısa açıklama` — modüller: `docs`, `description`, `simulation`, `lidar`, `camera`, `imu`, `behavior`, `ci`. Örnek: `[lidar] add gpu_lidar sensor macro and bridge config`
 - Üye B (kamera) kendi işini kendi GitHub hesabından commit'ler (ders şartı: commit geçmişi kişisel katkıyı göstermeli). Üye B'nin dosyalarını başka oturum yazmaz.
 - `build/`, `install/`, `log/` asla commit'lenmez.
