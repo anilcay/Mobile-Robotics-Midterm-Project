@@ -1,0 +1,23 @@
+Type: sensor_msgs/msg/Imu
+Publisher count: 1
+Subscription count: 2
+average rate: 90.774
+	min: 0.009s max: 0.025s std dev: 0.00224s window: 90
+average rate: 90.887
+	min: 0.004s max: 0.025s std dev: 0.00194s window: 181
+average rate: 92.072
+	min: 0.004s max: 0.025s std dev: 0.00173s window: 276
+x: -0.000284725374822498
+y: -3.503939683288005e-05
+z: -0.03231152705984314
+---
+header:
+  stamp:
+    sec: 1377
+    nanosec: 740000000
+  frame_id: imu_link
+vector:
+  x: 5.076276617624459e-09
+  y: -5.282395198296862e-07
+  z: -179.72856955513151
+---

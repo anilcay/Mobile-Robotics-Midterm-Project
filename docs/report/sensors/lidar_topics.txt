@@ -1,0 +1,14 @@
+Type: sensor_msgs/msg/LaserScan
+Publisher count: 1
+Subscription count: 2
+average rate: 7.894
+	min: 0.106s max: 0.173s std dev: 0.02103s window: 7
+average rate: 7.684
+	min: 0.106s max: 0.185s std dev: 0.02300s window: 14
+average rate: 7.918
+	min: 0.101s max: 0.185s std dev: 0.02193s window: 23
+stamp:
+  sec: 590
+  nanosec: 800000000
+frame_id: lidar_link
+---

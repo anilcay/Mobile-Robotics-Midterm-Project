@@ -25,5 +25,6 @@ desktop.ini
 
 # Large media (keep demo videos out of git; link them instead)
 *.mp4
+!docs/report/demo/2026-11-08 14-50-12.mp4
 *.mkv
 *.webm

@@ -1,0 +1,24 @@
+Type: sensor_msgs/msg/Image
+Publisher count: 1
+Subscription count: 2
+average rate: 13.365
+	min: 0.061s max: 0.098s std dev: 0.00933s window: 12
+average rate: 12.910
+	min: 0.056s max: 0.108s std dev: 0.01229s window: 25
+average rate: 13.319
+	min: 0.056s max: 0.108s std dev: 0.01110s window: 39
+stamp:
+  sec: 1229
+  nanosec: 712000000
+frame_id: camera_optical_link
+---
+header:
+  stamp:
+    sec: 1237
+    nanosec: 236000000
+  frame_id: camera_optical_link
+point:
+  x: -0.972517942583732
+  y: 0.0013606770833333333
+  z: 0.0
+---
